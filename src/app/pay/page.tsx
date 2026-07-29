@@ -152,7 +152,7 @@ export default function PayPage() {
             <div className="summary-row"><span>Charge fee</span><span>{naira(FEE)}</span></div>
             <div className="summary-total"><span>Total</span><span>{naira(totalAmount(dept, ticketType))}</span></div>
             <button className="pay-submit" disabled={!canPay} onClick={handlePay} type="button">
-              {loading ? "Redirecting to payment…" : `Pay ${naira(totalAmount(dept, ticketType))}`}
+              {loading ? "Redirecting to payment…" : `Pay ${naira(totalAmount(dept, ticketType))} (Coming Soon...)`}
             </button>
             {error && <p className="pay-error">{error}</p>}
           </div>
