@@ -38,28 +38,28 @@ export default function PayPage() {
 
   async function handlePay() {
     return new Promise<void>((resolve) => setTimeout(resolve, 1000)); // simulate delay
-    if (!canPay || !dept || !ticketType) return;
-    setLoading(true);
-    setError("");
-    try {
-      const res = await fetch("/api/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          dept,
-          ticketType,
-          matricNo,
-          attendee,
-          plusOne: needsPlus ? plusOne : null,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Checkout failed");
-      window.location.href = data.checkoutUrl; // hand off to payment
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Something went wrong");
-      setLoading(false);
-    }
+    // if (!canPay || !dept || !ticketType) return;
+    // setLoading(true);
+    // setError("");
+    // try {
+    //   const res = await fetch("/api/checkout", {
+    //     method: "POST",
+    //     headers: { "Content-Type": "application/json" },
+    //     body: JSON.stringify({
+    //       dept,
+    //       ticketType,
+    //       matricNo,
+    //       attendee,
+    //       plusOne: needsPlus ? plusOne : null,
+    //     }),
+    //   });
+    //   const data = await res.json();
+    //   if (!res.ok) throw new Error(data.error || "Checkout failed");
+    //   window.location.href = data.checkoutUrl; // hand off to payment
+    // } catch (e) {
+    //   setError(e instanceof Error ? e.message : "Something went wrong");
+    //   setLoading(false);
+    // }
   }
 
   return (
