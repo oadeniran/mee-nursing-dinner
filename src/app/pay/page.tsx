@@ -144,13 +144,13 @@ export default function PayPage() {
           </div>
         )}
 
-        {/* 6. Summary + pay */}
+        {/* 6. Summary + pay handlePay */}
         {dept && ticketType && (
           <div className="summary">
             <div className="summary-row"><span>Ticket ({ticketType === "single" ? "Solo" : "Plus One"})</span><span>{naira(ticketPrice(dept, ticketType))}</span></div>
             <div className="summary-row"><span>Charge fee</span><span>{naira(FEE)}</span></div>
             <div className="summary-total"><span>Total</span><span>{naira(totalAmount(dept, ticketType))}</span></div>
-            <button className="pay-submit" disabled={!canPay} onClick={handlePay} type="button">
+            <button className="pay-submit" disabled={!canPay} onClick={} type="button">
               {loading ? "Redirecting to payment…" : `Pay ${naira(totalAmount(dept, ticketType))}`}
             </button>
             {error && <p className="pay-error">{error}</p>}
