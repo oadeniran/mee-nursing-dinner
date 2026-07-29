@@ -31,7 +31,7 @@ function getLogo(name: string): string | null {
 // Decorative photos scattered around a section.
 function Scatter({ imgs }: { imgs: string[] }) {
   return (
-    <>
+    <div className="scatter-group">
       {imgs.map((src, i) => (
         <div
           key={`${src}-${i}`}
@@ -39,7 +39,7 @@ function Scatter({ imgs }: { imgs: string[] }) {
           style={{ backgroundImage: `url(${src})` }}
         />
       ))}
-    </>
+    </div>
   );
 }
 
