@@ -384,3 +384,25 @@ section { padding: 5rem 1.25rem; }
 .test-box { margin-top: 1rem; padding-top: 1rem; border-top: 1px dashed rgba(212,175,55,.3); }
 .test-box input { width: 100%; padding: .75rem 1rem; margin-bottom: .75rem; border-radius: 10px; border: 1px solid rgba(212,175,55,.3); background: rgba(255,255,255,.04); color: var(--cream); font-family: var(--font-body); }
 .test-box input:focus { outline: none; border-color: var(--gold-400); }
+
+/* ---- Top bar actions ---- */
+.topbar-actions { display: flex; align-items: center; gap: 0.6rem; }
+.pay-btn.secondary {
+  background: transparent;
+  color: var(--gold-300);
+  border: 1.5px solid var(--gold-400);
+  box-shadow: none;
+}
+.pay-btn.secondary:hover { background: rgba(212, 175, 55, 0.12); }
+
+/* Shrink the bar + buttons on phones so both fit */
+@media (max-width: 560px) {
+  .topbar { padding: 0.7rem 0.85rem; }
+  .brand { font-size: 1.05rem; }
+  .topbar-actions { gap: 0.4rem; }
+  .topbar .pay-btn {
+    padding: 0.45rem 0.7rem;
+    font-size: 0.78rem;
+    white-space: nowrap;   /* keep each label on one line */
+  }
+}

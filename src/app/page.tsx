@@ -62,15 +62,10 @@ export default function Home() {
           Owambe&nbsp;<span className="brand-accent">Dinner</span>
         </span>
 
-        <span>
-          <Link href="/pay" className="pay-btn">
-          Get Your Ticket
-        </Link>
-
-        <Link href="/verify" className="pay-btn">
-          Verify your payment
-        </Link>
-        </span>
+        <div className="topbar-actions">
+          <Link href="/pay" className="pay-btn">Get Your Ticket</Link>
+          <Link href="/verify" className="pay-btn secondary">Verify Payment</Link>
+        </div>
       </header>
 
       {/* HERO */}
