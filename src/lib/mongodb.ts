@@ -12,7 +12,22 @@ if (!global._mongoClientPromise) {
 }
 const clientPromise = global._mongoClientPromise;
 
+let indexesReady: Promise<void> | null = null;
+async function ensureIndexes(db: Db) {
+  try {
+    // Auto-delete expired OTPs, and one live OTP per email+purpose.
+    await db.collection("otps").createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 });
+    await db.collection("otps").createIndex({ email: 1, purpose: 1 }, { unique: true });
+    await db.collection("orders").createIndex({ email: 1 }, { unique: true });
+  } catch (e) {
+    console.error("index ensure failed", e);
+  }
+}
+
 export async function getDb(): Promise<Db> {
   const client = await clientPromise;
-  return client.db(env.mongodbDb);
+  const db = client.db(env.mongodbDb);
+  if (!indexesReady) indexesReady = ensureIndexes(db);
+  await indexesReady;
+  return db;
 }

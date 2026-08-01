@@ -61,9 +61,16 @@ export default function Home() {
         <span className="brand">
           Owambe&nbsp;<span className="brand-accent">Dinner</span>
         </span>
-        <Link href="/pay" className="pay-btn">
+
+        <span>
+          <Link href="/pay" className="pay-btn">
           Get Your Ticket
         </Link>
+
+        <Link href="/verify" className="pay-btn">
+          Verify your payment
+        </Link>
+        </span>
       </header>
 
       {/* HERO */}
@@ -91,8 +98,7 @@ export default function Home() {
           <p className="presents">Presents</p>
 
           {/* Theme → sub-theme → descriptor */}
-          <h1 className="hero-title gold-text">[ Placeholder Theme ]</h1>
-          <p className="hero-subtheme">[ Placeholder Sub-theme ]</p>
+          <h1 className="hero-title gold-text">ÀJỌYỌ̀ Royale</h1>
           <p className="hero-desc">A Night of Good Food &amp; Owambe Vibes</p>
 
           <div className="hero-meta">

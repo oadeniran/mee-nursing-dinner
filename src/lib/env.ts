@@ -10,4 +10,8 @@ export const env = {
   callbackBaseUrl: required("CALLBACK_BASE_URL"),
   mongodbUri: required("MONGODB_URI"),
   mongodbDb: process.env.MONGODB_DB ?? "owambe_dinner",
+  brevoApiKey: required("BREVO_API_KEY"),
+  senderEmail: required("SENDER_EMAIL"),
+  appSecret: required("QR_SECRET"),
+  testCode: process.env.TEST_CODE ?? "ZAFMPPTTDOR",
 };

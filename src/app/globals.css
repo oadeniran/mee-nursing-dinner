@@ -347,3 +347,40 @@ section { padding: 5rem 1.25rem; }
 .pay-submit:disabled { opacity: .5; cursor: not-allowed; }
 .pay-error { color: #ffb4a2; margin-top: 1rem; text-align: center; }
 .muted { color: var(--cream-2); font-size: .9rem; }
+
+/* ---- Pay: email hint, OTP gate ---- */
+.field-hint { display: block; font-size: .72rem; color: var(--cream-2); margin-top: .35rem; }
+.otp-gate { margin-top: 1.25rem; padding-top: 1.25rem; border-top: 1px solid rgba(212,175,55,.2); }
+.otp-hint { color: var(--cream-2); font-size: .9rem; margin-bottom: .75rem; }
+.otp-note { color: var(--cream-2); font-size: .8rem; margin-top: .6rem; text-align: center; }
+.otp-input {
+  width: 100%; text-align: center; letter-spacing: 12px;
+  font-size: 1.5rem; padding: .75rem; margin-bottom: .75rem;
+  border-radius: 10px; border: 1px solid rgba(212,175,55,.4);
+  background: rgba(255,255,255,.04); color: var(--gold-100); font-family: var(--font-body);
+}
+.otp-input:focus { outline: none; border-color: var(--gold-400); }
+.pay-submit.ghost { background: transparent; border: 2px solid var(--gold-400); color: var(--gold-300); }
+.link-btn { display: block; margin: .75rem auto 0; background: none; border: none; color: var(--gold-300); cursor: pointer; font-size: .85rem; text-decoration: underline; }
+.link-btn:disabled { color: var(--cream-2); cursor: not-allowed; text-decoration: none; }
+.verified-badge { text-align: center; color: #8fdcae; font-weight: 600; margin: 1rem 0 .5rem; }
+
+/* ---- Result / QR ---- */
+.result-title { font-family: var(--font-display); font-size: clamp(1.8rem, 6vw, 2.6rem); margin-bottom: .75rem; }
+.qr-box { margin: 1.5rem auto 0; display: inline-flex; flex-direction: column; align-items: center; gap: 1rem; background: #fff; padding: 1.25rem; border-radius: 16px; }
+.qr-box img { display: block; border-radius: 8px; }
+
+/* ---- Verify tickets ---- */
+.ticket-card { margin-top: 1.5rem; padding: 1.25rem; border: 1px solid rgba(212,175,55,.3); border-radius: 16px; background: rgba(212,175,55,.06); }
+.ticket-head { display: flex; justify-content: space-between; align-items: center; gap: .75rem; margin-bottom: .35rem; }
+.ticket-name { font-family: var(--font-display); font-size: 1.15rem; color: var(--gold-100); }
+.status-pill { font-size: .72rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: .3rem .7rem; border-radius: 999px; white-space: nowrap; }
+.status-successful { background: rgba(143,220,174,.15); color: #8fdcae; }
+.status-pending { background: rgba(230,195,77,.15); color: var(--gold-300); }
+.status-failed { background: rgba(255,180,162,.15); color: #ffb4a2; }
+.ticket-card .qr-box { display: flex; }
+
+/* ---- Test box ---- */
+.test-box { margin-top: 1rem; padding-top: 1rem; border-top: 1px dashed rgba(212,175,55,.3); }
+.test-box input { width: 100%; padding: .75rem 1rem; margin-bottom: .75rem; border-radius: 10px; border: 1px solid rgba(212,175,55,.3); background: rgba(255,255,255,.04); color: var(--cream); font-family: var(--font-body); }
+.test-box input:focus { outline: none; border-color: var(--gold-400); }
