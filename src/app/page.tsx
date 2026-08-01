@@ -122,15 +122,15 @@ export default function Home() {
 
           <div className="timeline">
             <div>
-              <strong>8:00 PM</strong>
+              <strong>XX:XX PM</strong>
               <span>Red Carpet</span>
             </div>
             <div>
-              <strong>9:00 PM</strong>
+              <strong>XX:XX PM</strong>
               <span>360 Camera</span>
             </div>
             <div>
-              <strong>11:00 PM</strong>
+              <strong>XX:XX PM</strong>
               <span>Main Event</span>
             </div>
           </div>
