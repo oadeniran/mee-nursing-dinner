@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   DEPARTMENTS, MAIN_COURSES, DESSERTS,
-  totalAmount, ticketPrice, FEE,
+  totalAmount, ticketPrice, FEE, MAX_SEATING_REQUESTS,
   type Dept, type TicketType,
 } from "@/lib/config";
 
@@ -35,6 +35,21 @@ export default function PayPage() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  type SeatReq = { label: string; value: string };
+  const [seating, setSeating] = useState<SeatReq[]>([{ label: "", value: "" }]);
+
+  const updateSeat = (i: number, field: keyof SeatReq, v: string) =>
+    setSeating((s) => s.map((row, idx) => (idx === i ? { ...row, [field]: v } : row)));
+  const addSeat = () =>
+    setSeating((s) => (s.length < MAX_SEATING_REQUESTS ? [...s, { label: "", value: "" }] : s));
+  const removeSeat = (i: number) =>
+    setSeating((s) => (s.length > 1 ? s.filter((_, idx) => idx !== i) : s));
+
+   // Only rows where the guest typed an identifier get sent.
+  const cleanedSeating = seating
+    .map((r) => ({ label: r.label.trim(), value: r.value.trim() }))
+    .filter((r) => r.value !== "");
 
   const needsPlus = ticketType === "plusOne";
   const menuOk = (m: Menu) => m.name.trim() && m.mainCourse && m.dessert;
@@ -113,6 +128,7 @@ export default function PayPage() {
           dept, ticketType, matricNo, email: email.trim(),
           attendee, plusOne: needsPlus ? plusOne : null, token,
           testCode: useTest ? testCode.trim() : undefined,
+          seatingRequests: cleanedSeating,
         }),
       });
       const data = await res.json();
@@ -166,7 +182,7 @@ export default function PayPage() {
             <span className="step-label">Your details</span>
             <div className="field">
               <label>Matric No.</label>
-              <input value={matricNo} onChange={(e) => setMatricNo(e.target.value)} placeholder="e.g. NUR/2021/001" />
+              <input value={matricNo} onChange={(e) => setMatricNo(e.target.value)} placeholder="e.g. NSC/2021/001" />
             </div>
             <div className="field">
               <label>Full Name</label>
@@ -188,6 +204,51 @@ export default function PayPage() {
               <label>Plus One&apos;s Name</label>
               <input value={plusOne.name} onChange={(e) => setPlusOne({ ...plusOne, name: e.target.value })} placeholder="Their name" />
             </div>
+          </div>
+        )}
+
+        {/* MEE + Plus One note */}
+        {needsPlus && (
+          <div className="mee-note">
+            <strong>Heads up:</strong> souvenirs and awards are for {DEPARTMENTS.mee.label} / {DEPARTMENTS.nursing.label} members.
+            If your plus one is <em>also </em> a student, they won&apos;t receive a souvenir on a
+            plus-one ticket. Therefore we recommend that only non-students be added as plus ones ({DEPARTMENTS.nursing.label} mandates that plus one cannot be a student).
+          </div>
+        )}
+
+        {/* Seating preference */}
+        {ticketType && (
+          <div className="step">
+            <span className="step-label">Who would you like in close proximity? <span className="optional">(optional)</span></span>
+            <p className="seat-hint">
+              We mix departments to help everyone meet new people — but we&apos;ll keep your friends close.
+              Add up to {MAX_SEATING_REQUESTS}. Enter each friend&apos;s email or matric no. (whatever
+              they used to buy their ticket) so we can match you. They must have a ticket too.
+            </p>
+
+            {seating.map((row, i) => (
+              <div className="seat-row" key={i}>
+                <input
+                  className="seat-name"
+                  value={row.label}
+                  onChange={(e) => updateSeat(i, "label", e.target.value)}
+                  placeholder="Friend's name"
+                />
+                <input
+                  className="seat-id"
+                  value={row.value}
+                  onChange={(e) => updateSeat(i, "value", e.target.value)}
+                  placeholder="Their email or matric no."
+                />
+                {seating.length > 1 && (
+                  <button type="button" className="seat-remove" onClick={() => removeSeat(i)} aria-label="Remove">×</button>
+                )}
+              </div>
+            ))}
+
+            {seating.length < MAX_SEATING_REQUESTS && (
+              <button type="button" className="link-btn seat-add" onClick={addSeat}>+ Add another</button>
+            )}
           </div>
         )}
 

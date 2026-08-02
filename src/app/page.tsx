@@ -3,6 +3,7 @@ import path from "node:path";
 import Link from "next/link";
 import { PartyPopper, Camera, Users, UtensilsCrossed, Sparkles } from "lucide-react";
 import HighlightsCarousel from "./HighlightsCarousel";
+import Countdown from "./Countdown";
 
 const IMAGE_EXTS = [".jpg", ".jpeg", ".png", ".webp", ".gif", ".avif"];
 
@@ -84,6 +85,7 @@ export default function Home() {
         <div className="topbar-actions">
           <Link href="/pay" className="pay-btn">Get Your Ticket</Link>
           <Link href="/verify" className="pay-btn secondary">Verify Payment</Link>
+          <Link href="/sponsorship" className="pay-btn">Sponsor/Partnership</Link>
         </div>
       </header>
 
@@ -134,7 +136,7 @@ export default function Home() {
               <span>Main Event</span>
             </div>
           </div>
-
+          <Countdown />
           <Link href="/pay" className="cta">
             Reserve My Seat
           </Link>
@@ -198,13 +200,13 @@ export default function Home() {
 
             <div className="course-card">
               <span className="course-tag">Course Two</span>
-              <h3>Main Course</h3>
+              <h3>Main Course (Drink + Water Included)</h3>
               <ul>
                 <li>Ofada Rice</li>
                 <li>Pounded Yam</li>
                 <li>Jollof + Fried</li>
               </ul>
-              <p className="pick-note">Pick one — you&apos;ll choose at checkout.</p>
+              <p className="pick-note">Pick one — you&apos;ll choose at checkout. Protein is Chicken.</p>
             </div>
 
             <div className="course-card">
@@ -269,11 +271,13 @@ export default function Home() {
       </section>
 
       {/* FOOTER CTA */}
-      <footer className="footer">
+       <footer className="footer">
         <p>Seats are limited — lock yours in before we sell out.</p>
-        <Link href="/pay" className="cta">
-          Pay for Your Ticket
-        </Link>
+        <div className="footer-actions">
+          <Link href="/pay" className="cta">Pay for Your Ticket</Link>
+          <Link href="/sponsorship" className="cta ghost-cta">Sponsorship / Ads</Link>
+          <Link href="/verify" className="cta">Verify Payment</Link>
+        </div>
       </footer>
     </main>
   );

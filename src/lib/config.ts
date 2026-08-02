@@ -9,8 +9,8 @@ export const DEPARTMENTS = {
 
 // Per-department pricing. Same default for now, easy to change per dept later.
 export const PRICING = {
-  nursing: { single: 30000, plusOne: 40000 },
-  mee: { single: 30000, plusOne: 40000 },
+  nursing: { single: 30000, plusOne: 55000 },
+  mee: { single: 35000, plusOne: 55000 },
 } as const;
 
 export const MAIN_COURSES = ["Ofada Rice", "Pounded Yam", "Jollof + Fried"] as const;
@@ -21,3 +21,5 @@ export type TicketType = keyof (typeof PRICING)["nursing"];
 
 export const ticketPrice = (d: Dept, t: TicketType) => PRICING[d][t];
 export const totalAmount = (d: Dept, t: TicketType) => PRICING[d][t] + FEE;
+
+export const MAX_SEATING_REQUESTS = 5;

@@ -41,6 +41,7 @@ export default async function CheckinPage({
         desserts={[order.attendee?.dessert, order.plusOne?.dessert].filter(Boolean)}
         test={!!order.test}
         alreadyCheckedIn={!!order.checkedIn}
+        tableNumber={order.tableNumber ?? null}
         checkedInAt={order.checkedInAt ? new Date(order.checkedInAt).toISOString() : null}
       />
     </Shell>

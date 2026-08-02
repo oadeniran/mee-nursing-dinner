@@ -10,14 +10,17 @@ export default function CheckinClient(props: {
   dept: string; ticketType: "single" | "plusOne";
   mains: string[]; desserts: string[]; test: boolean;
   alreadyCheckedIn: boolean; checkedInAt: string | null;
+  tableNumber: number | null;
 }) {
-  const [stage, setStage] = useState<"idle" | "sent" | "done">(
+  const [stage, setStage] = useState<"idle" | "sent" | "verified" | "done">(
     props.alreadyCheckedIn ? "done" : "idle"
   );
   const [already, setAlready] = useState(props.alreadyCheckedIn);
   const [checkedInAt, setCheckedInAt] = useState<string | null>(props.checkedInAt);
+  const [tableNumber, setTableNumber] = useState<number | null>(props.tableNumber);
   const [emailHint, setEmailHint] = useState("");
   const [code, setCode] = useState("");
+  const [confirmToken, setConfirmToken] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
@@ -36,7 +39,7 @@ export default function CheckinClient(props: {
         throw new Error(data.error || "Could not send code");
       }
       setEmailHint(data.emailHint || "");
-      setStage("sent");
+      setCode(""); setStage("sent");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not send code");
     } finally { setBusy(false); }
@@ -54,12 +57,40 @@ export default function CheckinClient(props: {
         if (res.status === 409) { setAlready(true); setCheckedInAt(data.checkedInAt ?? null); setStage("done"); }
         throw new Error(data.error || "Verification failed");
       }
-      setCheckedInAt(data.checkedInAt ?? new Date().toISOString());
-      setStage("done");
+      setConfirmToken(data.confirmToken);
+      setStage("verified");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Verification failed");
     } finally { setBusy(false); }
   }
+
+  async function confirm() {
+    setBusy(true); setError("");
+    try {
+      const res = await fetch("/api/checkin/confirm", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId: props.orderId, sig: props.sig, confirmToken }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        if (res.status === 409) { setAlready(true); setCheckedInAt(data.checkedInAt ?? null); setTableNumber(data.tableNumber ?? null); setStage("done"); }
+        else if (data.needsReverify) { setStage("sent"); } // token expired — re-enter code
+        throw new Error(data.error || "Check-in failed");
+      }
+      setCheckedInAt(data.checkedInAt ?? new Date().toISOString());
+      setTableNumber(data.tableNumber ?? null);
+      setStage("done");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Check-in failed");
+    } finally { setBusy(false); }
+  }
+
+  const TableLine = () =>
+    tableNumber != null ? (
+      <div className="table-badge">Table {tableNumber}</div>
+    ) : (
+      <div className="table-badge muted-table">No table assigned yet — seat at any open table</div>
+    );
 
   return (
     <div className="checkin">
@@ -79,19 +110,21 @@ export default function CheckinClient(props: {
         )}
       </div>
 
-      {/* Already checked in — the double-entry warning */}
+      {/* Already checked in */}
       {stage === "done" && already && (
         <div className="checkin-alert warn">
           <div className="big">⚠ ALREADY CHECKED IN</div>
           {checkedInAt && <p>at {fmt(checkedInAt)}</p>}
+          <TableLine />
           <p className="muted">Do not admit again without organizer approval.</p>
         </div>
       )}
 
-      {/* Just checked in successfully */}
+      {/* Just checked in */}
       {stage === "done" && !already && (
         <div className="checkin-alert ok">
           <div className="big">✓ CHECKED IN</div>
+          <TableLine />
           <p>Admit {admitCount} {admitCount === 1 ? "guest" : "guests"}. Enjoy the night!</p>
         </div>
       )}
@@ -99,7 +132,7 @@ export default function CheckinClient(props: {
       {/* Step 1: send code */}
       {stage === "idle" && (
         <>
-          <p className="muted checkin-instr">Tap below to send a one-time code to the guest&apos;s email. Ask them to read it back to you.</p>
+          <p className="muted checkin-instr">Send a one-time code to the guest&apos;s email, then ask them to read it back.</p>
           <button className="pay-submit" disabled={busy} onClick={sendOtp} type="button">
             {busy ? "Sending…" : "Send check-in code"}
           </button>
@@ -117,9 +150,22 @@ export default function CheckinClient(props: {
             placeholder="••••••" inputMode="numeric" maxLength={6}
           />
           <button className="pay-submit" disabled={code.length !== 6 || busy} onClick={verify} type="button">
-            {busy ? "Checking…" : "Confirm check-in"}
+            {busy ? "Verifying…" : "Verify code"}
           </button>
           <button className="link-btn" disabled={busy} onClick={sendOtp} type="button">Resend code</button>
+        </>
+      )}
+
+      {/* Step 3: verified → confirm check-in */}
+      {stage === "verified" && (
+        <>
+          <div className="checkin-alert ok" style={{ marginBottom: "1rem" }}>
+            <div className="big">Code verified ✓</div>
+            <p>Confirm to check this guest in.</p>
+          </div>
+          <button className="pay-submit" disabled={busy} onClick={confirm} type="button">
+            {busy ? "Checking in…" : `Check in ${admitCount === 2 ? "(2 guests)" : ""}`}
+          </button>
         </>
       )}
 

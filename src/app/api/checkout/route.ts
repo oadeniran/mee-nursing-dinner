@@ -10,9 +10,10 @@ type MenuChoice = { name: string; mainCourse: string; dessert: string };
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { dept, ticketType, matricNo, email, attendee, plusOne, token, testCode } = body as {
+    const { dept, ticketType, matricNo, email, attendee, plusOne, token, testCode, seatingRequests } = body as {
       dept: Dept; ticketType: TicketType; matricNo: string; email: string;
       attendee: MenuChoice; plusOne: MenuChoice | null; token: string; testCode?: string;
+      seatingRequests?: { label: string; value: string }[];
     };
     const cleanEmail = String(email || "").trim().toLowerCase();
 
@@ -44,11 +45,25 @@ export async function POST(req: Request) {
     if (existing && existing.status === "successful" && !existing.test)
       return bad("You already have a ticket for this email. Visit the verify page to view it.", 409);
 
+    // Cap + clean seating requests server-side.
+    const cleanSeating = Array.isArray(seatingRequests)
+      ? seatingRequests
+          .filter((r) => r && typeof r.value === "string" && r.value.trim() !== "")
+          .slice(0, 5)
+          .map((r) => ({
+            label: String(r.label ?? "").trim().slice(0, 80),
+            value: String(r.value).trim().toLowerCase().slice(0, 120),
+          }))
+      : [];
+
     const base = {
       dept, deptLabel: DEPARTMENTS[dept].label, ticketType,
       matricNo: matricNo.trim(), email: cleanEmail,
       attendee, plusOne: ticketType === "plusOne" ? plusOne : null,
       ticket, fee: FEE, amount, test: isTest, updatedAt: new Date(),
+      seatingRequests: cleanSeating,       // raw, as entered
+      seatingRequestIds: null,             // resolved later by the matching job
+      tableNumber: null,
     };
     let insertedId;
     if (existing) {

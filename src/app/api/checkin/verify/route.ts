@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import { ObjectId } from "mongodb";
 import { getDb } from "@/lib/mongodb";
-import { hashCode, verifyId } from "@/lib/security";
+import { hashCode, verifyId, signToken } from "@/lib/security";
 
 const MAX_ATTEMPTS = 5;
+const CONFIRM_TTL = 10 * 60; // seconds the usher has to hit "Check in" after verifying
 
 export async function POST(req: Request) {
   try {
@@ -12,11 +13,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid or tampered ticket" }, { status: 403 });
 
     const db = await getDb();
-    const orders = db.collection("orders");
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let order: any;
     try {
-      order = await orders.findOne({ _id: new ObjectId(String(orderId)) });
+      order = await db.collection("orders").findOne({ _id: new ObjectId(String(orderId)) });
     } catch {
       return NextResponse.json({ error: "Ticket not found" }, { status: 404 });
     }
@@ -39,16 +39,9 @@ export async function POST(req: Request) {
 
     await otps.deleteOne({ _id: doc._id });
 
-    // Atomic check-in: only flips if not already checked in — the double-entry guard.
-    const checkedInAt = new Date();
-    const result = await orders.updateOne(
-      { _id: order._id, checkedIn: { $ne: true } },
-      { $set: { checkedIn: true, checkedInAt } }
-    );
-    if (result.modifiedCount === 0)
-      return NextResponse.json({ error: "Already checked in" }, { status: 409 });
-
-    return NextResponse.json({ ok: true, checkedInAt });
+    // Short-lived proof this order's code was verified — the confirm step requires it.
+    const confirmToken = signToken({ orderId: String(orderId), purpose: "checkin-confirm" }, CONFIRM_TTL);
+    return NextResponse.json({ ok: true, confirmToken });
   } catch (e) {
     console.error("checkin verify error", e);
     return NextResponse.json({ error: "Verification failed" }, { status: 500 });
