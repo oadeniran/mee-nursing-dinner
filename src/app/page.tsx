@@ -144,7 +144,7 @@ export default function Home() {
       </section>
 
       <section className="has-scatter">
-        <Scatter imgs={pick(4, 13)} />
+        <Scatter imgs={pick(4, 4)} />
         <div className="wrap reveal">
           <p className="eyebrow">Dress Code</p>
           <h2 className="section-title">
@@ -181,7 +181,7 @@ export default function Home() {
 
       {/* THE 3-COURSE MEAL */}
       <section className="on-cream has-scatter">
-        <Scatter imgs={pick(4, 4)} />
+        <Scatter imgs={pick(4, 8)} />
         <div className="wrap reveal">
           <p className="eyebrow">The Menu</p>
           <h2 className="section-title">A Full 3-Course Experience</h2>
@@ -224,7 +224,7 @@ export default function Home() {
 
       {/* NON-STOP FUN */}
       <section className="has-scatter">
-        <Scatter imgs={pick(5, 8)} />
+        <Scatter imgs={pick(5, 13)} />
         <div className="wrap reveal">
           <p className="eyebrow">The Vibe</p>
           <h2 className="section-title">
