@@ -31,15 +31,29 @@ export default function SponsorshipPage() {
               Get your brand featured on the red-carpet backdrop — seen by every guest, and in every
               photo and 360 video from the night.
             </p>
+            <p>
+              We&apos;ll also dedicate a few minutes of the program to spotlight your brand and share
+              your social media handles, so the room knows exactly where to find you.
+            </p>
             <p className="sponsor-price">₦5,000</p>
             <p className="sponsor-fine">per logo placement</p>
-            
-            <a className="sponsor-btn dark"
-              href={wa("2348169147491", "Hi! I'd like to feature my brand logo on the Owambe Dinner red-carpet backdrop.")}
-              target="_blank" rel="noopener noreferrer"
-            >
-              <WhatsAppIcon /> Reserve a spot
-            </a>
+
+            <div className="sponsor-contacts">
+              
+              <a  className="sponsor-btn dark"
+                href={wa("2348169147491", "Hi! I'd like to feature my brand logo on the Owambe Dinner red-carpet backdrop (Nursing).")}
+                target="_blank" rel="noopener noreferrer"
+              >
+                <WhatsAppIcon /> Reserve — Nursing
+              </a>
+              
+              <a  className="sponsor-btn dark"
+                href={wa("2348066605871", "Hi! I'd like to feature my brand logo on the Owambe Dinner red-carpet backdrop (Mechanical Eng).")}
+                target="_blank" rel="noopener noreferrer"
+              >
+                <WhatsAppIcon /> Reserve — Mechanical Eng
+              </a>
+            </div>
           </div>
         </section>
 
