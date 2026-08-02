@@ -7,6 +7,7 @@ const HIGHLIGHTS = [
   { title: "Award Presentation", blurb: "Recognising the standouts — the moments worth dressing up for." },
   { title: "Souvenir Presentation", blurb: "Everyone leaves with a little something to remember the night by." },
   { title: "Mixed Seating", blurb: "Seating arranged to spark new conversations across both departments." },
+  { title: "After Party Props", blurb: "Fun props available for guests to keep the party going after the main event." },
 ];
 
 const INTERVAL = 4000;
