@@ -14,7 +14,7 @@ export const PRICING = {
 } as const;
 
 export const MAIN_COURSES = ["Ofada Rice", "Pounded Yam", "Jollof + Fried"] as const;
-export const DESSERTS = ["Cake Slice", "Parfait"] as const;
+export const DESSERTS = ["Cake Slice (Chocolate)", "Cake Slice (Red Velvet)", "Parfait"] as const;
 
 export type Dept = keyof typeof PRICING;
 export type TicketType = keyof (typeof PRICING)["nursing"];

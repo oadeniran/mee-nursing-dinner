@@ -601,6 +601,8 @@ section { padding: 5rem 1.25rem; }
 .sponsor-btn.light { background: rgba(212,175,55,.15); color: var(--gold-300); border: 1.5px solid var(--gold-400); }
 .sponsor-btn.light:hover { background: rgba(212,175,55,.25); }
 
+.required { color: var(--gold-300); font-size: .85rem; margin-top: 1.5rem; }
+
 @media (max-width: 720px) {
   .sponsor-side { padding: 2.5rem 1.5rem; }
 }

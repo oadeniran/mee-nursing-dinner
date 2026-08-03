@@ -213,7 +213,8 @@ export default function Home() {
               <span className="course-tag">Course Three</span>
               <h3>Dessert</h3>
               <ul>
-                <li>Cake Slice</li>
+                <li>Cake Slice (Chocolate)</li>
+                <li>Cake Slice (Red Velvet)</li>
                 <li>Parfait</li>
               </ul>
               <p className="pick-note">Pick one — you&apos;ll choose at checkout.</p>

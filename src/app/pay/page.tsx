@@ -341,13 +341,13 @@ function MenuPicker({ who, value, onChange }: { who: string; value: Menu; onChan
   return (
     <div className="menu-block">
       <h4>{who}</h4>
-      <p className="menu-sub">Main course</p>
+      <p className="menu-sub">Main course <span className="required">*</span></p>
       <div className="radio-row">
         {MAIN_COURSES.map((m) => (
           <button key={m} type="button" className={`radio-pill ${value.mainCourse === m ? "active" : ""}`} onClick={() => onChange({ ...value, mainCourse: m })}>{m}</button>
         ))}
       </div>
-      <p className="menu-sub">Dessert</p>
+      <p className="menu-sub">Dessert <span className="required">*</span></p>
       <div className="radio-row">
         {DESSERTS.map((d) => (
           <button key={d} type="button" className={`radio-pill ${value.dessert === d ? "active" : ""}`} onClick={() => onChange({ ...value, dessert: d })}>{d}</button>
