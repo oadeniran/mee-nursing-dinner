@@ -1,19 +1,22 @@
 import { NextResponse } from "next/server";
+import type { UpdateFilter, Document } from "mongodb";
 import { getDb } from "@/lib/mongodb";
 import { env } from "@/lib/env";
 import { verifyToken } from "@/lib/security";
-import { DEPARTMENTS, PRICING, FEE, MAIN_COURSES, DESSERTS, type Dept, type TicketType } from "@/lib/config";
-import type { UpdateFilter, Document } from "mongodb";
+import { DEPARTMENTS, PRICING, feeFor, MAIN_COURSES, DESSERTS, type Dept, type TicketType } from "@/lib/config";
 
 type MenuChoice = { name: string; mainCourse: string; dessert: string };
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { dept, ticketType, matricNo, email, attendee, plusOne, token, testCode, seatingRequests } = body as {
+    const {
+      dept, ticketType, matricNo, email, attendee, plusOne, token, testCode,
+      seatingRequests, payNow, resume // payNow: amount (₦) the user wants to pay this round
+    } = body as {
       dept: Dept; ticketType: TicketType; matricNo: string; email: string;
       attendee: MenuChoice; plusOne: MenuChoice | null; token: string; testCode?: string;
-      seatingRequests?: { label: string; value: string }[];
+      seatingRequests?: { label: string; value: string }[]; payNow?: number; resume?: boolean
     };
     const cleanEmail = String(email || "").trim().toLowerCase();
 
@@ -27,7 +30,7 @@ export async function POST(req: Request) {
     if (wantsTest && testCode!.trim() !== env.testCode) return bad("Invalid test code", 400);
     const isTest = wantsTest;
 
-    // Validate
+    // Validate core fields
     if (!DEPARTMENTS[dept]) return bad("Invalid department");
     if (ticketType !== "single" && ticketType !== "plusOne") return bad("Invalid ticket type");
     if (!matricNo?.trim() || !attendee?.name?.trim()) return bad("Missing attendee details");
@@ -36,81 +39,112 @@ export async function POST(req: Request) {
       return bad("Invalid plus-one details");
 
     const ticket = PRICING[dept][ticketType];
-    const amount = ticket + FEE;
+    const amountDue = ticket; // fee is NOT part of what they owe — it's the provider's, per transaction
+
     const db = await getDb();
     const orders = db.collection("orders");
-
-    // One order per email: real paid tickets are locked; pending/failed/test are reused.
     const existing = await orders.findOne({ email: cleanEmail });
-    if (existing && existing.status === "successful" && !existing.test)
-      return bad("You already have a ticket for this email. Visit the verify page to view it.", 409);
 
-    // Cap + clean seating requests server-side.
+    const isResume = resume === true && existing && existing.status !== "successful";
+    if (!isResume) {
+      const v = verifyToken(token);
+      if (!v || v.purpose !== "payment" || v.email !== cleanEmail)
+        return bad("Please verify your email before paying", 401);
+    }
+
+    if (existing && existing.status === "successful" && !existing.test)
+      return bad("This email already has a fully paid ticket. Visit the verify page to view it.", 409);
+
+    const totalPaid: number = existing?.totalPaid ?? 0;
+    const remaining = amountDue - totalPaid;
+    if (remaining <= 0 && !isTest)
+      return bad("This ticket is already fully paid.", 409);
+
+    // How much of the TICKET to pay this round (server-clamped to the balance).
+    let instalment = remaining;
+    if (typeof payNow === "number" && Number.isFinite(payNow)) {
+      const wanted = Math.round(payNow);
+      if (wanted < 1) return bad("Enter a valid amount to pay", 400);
+      instalment = Math.min(wanted, remaining);
+    }
+
+    // Provider fee on THIS transaction, added on top.
+    const fee = feeFor(instalment);
+    const chargeTotal = instalment + fee; // what we actually send to the checkout link
+
     const cleanSeating = Array.isArray(seatingRequests)
       ? seatingRequests
           .filter((r) => r && typeof r.value === "string" && r.value.trim() !== "")
           .slice(0, 5)
-          .map((r) => ({
-            label: String(r.label ?? "").trim().slice(0, 80),
-            value: String(r.value).trim().toLowerCase().slice(0, 120),
-          }))
+          .map((r) => ({ label: String(r.label ?? "").trim().slice(0, 80), value: String(r.value).trim().toLowerCase().slice(0, 120) }))
       : [];
 
     const base = {
       dept, deptLabel: DEPARTMENTS[dept].label, ticketType,
       matricNo: matricNo.trim(), email: cleanEmail,
       attendee, plusOne: ticketType === "plusOne" ? plusOne : null,
-      ticket, fee: FEE, amount, test: isTest, updatedAt: new Date(),
-      seatingRequests: cleanSeating,       // raw, as entered
-      seatingRequestIds: null,             // resolved later by the matching job
-      tableNumber: null,
+      ticket, amountDue, test: isTest, updatedAt: new Date(),
+      seatingRequests: cleanSeating,
     };
-    let insertedId;
+
+    if (isTest) {
+      if (existing) {
+        await orders.updateOne({ _id: existing._id }, { $set: { ...base, status: "successful", totalPaid: amountDue } });
+        return NextResponse.json({ redirectUrl: `/success/${existing._id.toString()}` });
+      }
+      const r = await orders.insertOne({ ...base, status: "successful", totalPaid: amountDue, payments: [], createdAt: new Date(), tableNumber: null, seatingRequestIds: null });
+      return NextResponse.json({ redirectUrl: `/success/${r.insertedId.toString()}` });
+    }
+
+    // pendingInstalment.amount = the TICKET portion to credit (fee excluded from the ledger).
+    let _id;
     if (existing) {
-      // Retry: reuse the same document, archive the previous ref.
-      insertedId = existing._id;
+      _id = existing._id;
       const update: UpdateFilter<Document> = {
-        $set: { ...base, status: isTest ? "successful" : "pending" },
+        $set: {
+          ...base, totalPaid,
+          status: totalPaid > 0 ? "partial" : "pending",
+          pendingInstalment: { amount: instalment, fee, charged: chargeTotal, transactionRef: null, at: new Date() },
+        },
       };
       if (existing.transactionRef) {
-        update.$push = {
-          refHistory: { ref: existing.transactionRef, at: new Date() },
-        } as unknown as UpdateFilter<Document>["$push"];
+        update.$push = { refHistory: { ref: existing.transactionRef, at: new Date() } } as unknown as UpdateFilter<Document>["$push"];
       }
       await orders.updateOne({ _id: existing._id }, update);
     } else {
-      const r = await orders.insertOne({ ...base, status: isTest ? "successful" : "pending", createdAt: new Date() });
-      insertedId = r.insertedId;
+      const r = await orders.insertOne({
+        ...base, totalPaid: 0, status: "pending", payments: [],
+        pendingInstalment: { amount: instalment, fee, charged: chargeTotal, transactionRef: null, at: new Date() },
+        createdAt: new Date(), tableNumber: null, seatingRequestIds: null,
+      });
+      _id = r.insertedId;
     }
-    const orderId = insertedId.toString();
+    let orderId = _id.toString();
 
-    // Test: skip the provider
-    if (isTest) return NextResponse.json({ redirectUrl: `/success/${orderId}` });
-
-    // Real: call the payment service
     const callbackUrl = `${env.callbackBaseUrl}/success/${orderId}`;
     const res = await fetch(env.checkoutApiUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        amount,
+        amount: chargeTotal, // instalment + fee
         metadata: {
           attendeeName: attendee.name, callbackUrl, orderId, email: cleanEmail,
           department: DEPARTMENTS[dept].label, ticketType, matricNo: matricNo.trim(),
-          attendee, plusOne: base.plusOne, ticket, fee: FEE,
+          ticketPortion: instalment, fee, amountDue, previouslyPaid: totalPaid,
         },
       }),
     });
 
     if (!res.ok) {
-      await orders.updateOne({ _id: insertedId }, { $set: { status: "checkout_failed", checkoutHttpStatus: res.status } });
+      await orders.updateOne({ _id }, { $set: { status: totalPaid > 0 ? "partial" : "checkout_failed", checkoutHttpStatus: res.status, pendingInstalment: null } });
       return bad("Could not start checkout, please try again", 502);
     }
 
     const data = (await res.json()) as { checkoutUrl: string; transactionRef: string };
+    // Bind the provider's ref to the pending instalment so confirm can verify + credit it.
     await orders.updateOne(
-      { _id: insertedId },
-      { $set: { transactionRef: data.transactionRef, checkoutUrl: data.checkoutUrl, status: "pending", statusCheckedAt: null } }
+      { _id },
+      { $set: { transactionRef: data.transactionRef, checkoutUrl: data.checkoutUrl, "pendingInstalment.transactionRef": data.transactionRef } }
     );
 
     return NextResponse.json({ checkoutUrl: data.checkoutUrl, orderId });

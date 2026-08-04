@@ -33,7 +33,7 @@ export default async function SuccessPage({ params }: { params: Promise<{ id: st
           </>
         ) : status === "successful" ? (
           <>
-            <h1 className="result-title">Payment <span className="gold-text">Received</span> 🎉{order.test ? " (TEST)" : ""}</h1>
+            <h1 className="result-title">Payment <span className="gold-text">Complete</span> 🎉{order.test ? " (TEST)" : ""}</h1>
             <p className="muted">Thanks, {order.attendee?.name}. Show this QR at the door on September 18.</p>
             {qr && (
               <div className="qr-box">
@@ -43,8 +43,17 @@ export default async function SuccessPage({ params }: { params: Promise<{ id: st
               </div>
             )}
             <p className="muted" style={{ marginTop: "1.5rem" }}>
-              Lost this page? Retrieve it anytime at <Link href="/verify" className="gold-text">/verify</Link> with your email.
+              Lost this page? Retrieve it anytime at <Link href="/verify" className="gold-text">/verify</Link>.
             </p>
+          </>
+        ) : status === "partial" ? (
+          <>
+            <h1 className="result-title">Payment <span className="gold-text">Received</span></h1>
+            <p className="muted">
+              We&apos;ve recorded {order.attendee?.name ? order.attendee.name + "'s" : "your"} payment.
+              Your ticket unlocks once the full balance is paid.
+            </p>
+            <p style={{ marginTop: "1.5rem" }}><Link href="/verify" className="cta">View balance &amp; pay rest</Link></p>
           </>
         ) : status === "failed" ? (
           <>

@@ -215,7 +215,6 @@ export default function Home() {
               <ul>
                 <li>Cake Slice (Chocolate)</li>
                 <li>Cake Slice (Red Velvet)</li>
-                <li>Parfait</li>
               </ul>
               <p className="pick-note">Pick one — you&apos;ll choose at checkout.</p>
             </div>

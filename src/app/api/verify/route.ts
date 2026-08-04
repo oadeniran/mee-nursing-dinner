@@ -17,21 +17,24 @@ export async function POST(req: Request) {
     const orders = [];
     for (const o of docs) {
       const status = await checkAndSyncStatus(db, o);
+      const amountDue = o.amountDue ?? o.amount ?? 0;
+      // re-read paid total (checkAndSyncStatus may have just credited it)
+      const fresh = await db.collection("orders").findOne({ _id: o._id }, { projection: { totalPaid: 1 } });
+      const totalPaid = fresh?.totalPaid ?? o.totalPaid ?? 0;
+      const remaining = Math.max(0, amountDue - totalPaid);
       const qr = status === "successful" ? await generateQrDataUrl(o._id.toString()) : null;
+
       orders.push({
         orderId: o._id.toString(),
         name: o.attendee?.name ?? "",
         plusOneName: o.plusOne?.name ?? null,
-        deptKey: o.dept ?? "",          // key, for resuming the form
-        deptLabel: o.deptLabel ?? "",   // label, for display
+        deptKey: o.dept ?? "",
+        deptLabel: o.deptLabel ?? "",
         ticketType: o.ticketType,
-        amount: o.amount,
+        amountDue, totalPaid, remaining,
         matricNo: o.matricNo ?? "",
-        attendee: o.attendee,
-        plusOne: o.plusOne,
-        status,
-        test: !!o.test,
-        qr,
+        attendee: o.attendee, plusOne: o.plusOne,
+        status, test: !!o.test, qr,
       });
     }
 

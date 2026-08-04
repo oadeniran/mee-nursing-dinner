@@ -10,9 +10,9 @@ type Menu = { name: string; mainCourse: string; dessert: string };
 type Order = {
   orderId: string; name: string; plusOneName: string | null;
   deptKey: string; deptLabel: string; ticketType: "single" | "plusOne";
-  amount: number; matricNo: string;
+  amountDue: number; totalPaid: number; remaining: number; matricNo: string;
   attendee: Menu; plusOne: Menu | null;
-  status: "pending" | "successful" | "failed"; test: boolean; qr: string | null;
+  status: "pending" | "partial" | "successful" | "failed"; test: boolean; qr: string | null;
 };
 
 export default function VerifyPage() {
@@ -37,15 +37,10 @@ export default function VerifyPage() {
     } finally { setLoading(false); }
   }
 
-  // Stash the order details and jump to the pay page to finish/retry.
   function resume(o: Order) {
     sessionStorage.setItem("resumeOrder", JSON.stringify({
-      dept: o.deptKey,
-      ticketType: o.ticketType,
-      matricNo: o.matricNo,
-      email: email.trim(),
-      attendee: o.attendee,
-      plusOne: o.plusOne,
+      dept: o.deptKey, ticketType: o.ticketType, matricNo: o.matricNo,
+      email: email.trim(), attendee: o.attendee, plusOne: o.plusOne,
     }));
     router.push("/pay?resume=1");
   }
@@ -73,40 +68,52 @@ export default function VerifyPage() {
           </p>
         )}
 
-        {orders && orders.map((o) => (
-          <div key={o.orderId} className="ticket-card">
-            <div className="ticket-head">
-              <span className="ticket-name">{o.name}{o.plusOneName ? ` + ${o.plusOneName}` : ""}</span>
-              <span className={`status-pill status-${o.status}`}>
-                {o.status === "successful" ? "Paid" : o.status === "failed" ? "Failed" : "Pending"}
-                {o.test ? " · TEST" : ""}
-              </span>
-            </div>
-            <p className="muted">{o.deptLabel} · {o.ticketType === "single" ? "Solo" : "Plus One"} · {naira(o.amount)}</p>
-
-            {o.status === "successful" && o.qr && (
-              <div className="qr-box">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={o.qr} alt="Check-in QR code" width={260} height={260} />
-                <a className="pay-submit ghost" href={o.qr} download={`owambe-ticket-${o.orderId}.png`}>Download QR</a>
+        {orders && orders.map((o) => {
+          const paidSome = o.totalPaid > 0 && o.status !== "successful";
+          return (
+            <div key={o.orderId} className="ticket-card">
+              <div className="ticket-head">
+                <span className="ticket-name">{o.name}{o.plusOneName ? ` + ${o.plusOneName}` : ""}</span>
+                <span className={`status-pill status-${o.status}`}>
+                  {o.status === "successful" ? "Paid" : o.status === "partial" ? "Part-paid" : o.status === "failed" ? "Failed" : "Pending"}
+                  {o.test ? " · TEST" : ""}
+                </span>
               </div>
-            )}
+              <p className="muted">{o.deptLabel} · {o.ticketType === "single" ? "Solo" : "Plus One"}</p>
 
-            {o.status === "pending" && (
-              <>
-                <p className="otp-note">Payment not confirmed yet. If you just paid, re-check in a moment — otherwise complete it below.</p>
-                <button className="pay-submit ghost" onClick={() => resume(o)} type="button">Complete payment</button>
-              </>
-            )}
+              {/* Ledger */}
+              {o.status !== "successful" && (
+                <div className="ledger">
+                  <div className="ledger-row"><span>Total</span><span>{naira(o.amountDue)}</span></div>
+                  <div className="ledger-row"><span>Paid so far</span><span>{naira(o.totalPaid)}</span></div>
+                  <div className="ledger-row balance"><span>Balance left</span><span>{naira(o.remaining)}</span></div>
+                  <p className="fee-note">Each payment adds a 1% fee (max ₦300). Fewer, larger payments mean less total fee.</p>
+                </div>
+              )}
 
-            {o.status === "failed" && (
-              <>
-                <p className="otp-note">This payment failed.</p>
-                <button className="pay-submit ghost" onClick={() => resume(o)} type="button">Retry payment</button>
-              </>
-            )}
-          </div>
-        ))}
+              {o.status === "successful" && o.qr && (
+                <div className="qr-box">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={o.qr} alt="Check-in QR code" width={260} height={260} />
+                  <a className="pay-submit ghost" href={o.qr} download={`owambe-ticket-${o.orderId}.png`}>Download QR</a>
+                </div>
+              )}
+
+              {(o.status === "partial" || o.status === "pending" || o.status === "failed") && o.remaining > 0 && (
+                <>
+                  <p className="otp-note">
+                    {paidSome
+                      ? "Payment received — your ticket unlocks once the balance is cleared."
+                      : "Complete your payment to unlock your ticket."}
+                  </p>
+                  <button className="pay-submit ghost" onClick={() => resume(o)} type="button">
+                    {paidSome ? `Pay balance (${naira(o.remaining)})` : "Complete payment"}
+                  </button>
+                </>
+              )}
+            </div>
+          );
+        })}
       </div>
     </main>
   );
