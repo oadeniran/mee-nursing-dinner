@@ -1,4 +1,4 @@
-import { Db, ObjectId } from "mongodb";
+import { Db, ObjectId, UpdateFilter, Document } from "mongodb";
 import { env } from "./env";
 
 type Status = "pending" | "partial" | "successful" | "failed";
@@ -49,14 +49,17 @@ export async function checkAndSyncStatus(db: Db, order: any): Promise<Status> {
       const newTotal = totalPaid + credit;
       const settled = newTotal >= amountDue;
 
+      const update: UpdateFilter<Document> = {
+        $inc: { totalPaid: credit },
+        $set: { status: settled ? "successful" : "partial", pendingInstalment: null, statusCheckedAt: new Date() },
+      };
+      update.$push = { payments: { transactionRef: ref, amount: credit, at: new Date() } } as unknown as UpdateFilter<Document>["$push"];
+
       await db.collection("orders").updateOne(
         { _id: new ObjectId(order._id), "payments.transactionRef": { $ne: ref } }, // guard double-credit
-        {
-          $inc: { totalPaid: credit },
-          $push: { payments: { transactionRef: ref, amount: credit, at: new Date() } },
-          $set: { status: settled ? "successful" : "partial", pendingInstalment: null, statusCheckedAt: new Date() },
-        }
+        update
       );
+
       totalPaid = newTotal;
       return settled ? "successful" : "partial";
     }
