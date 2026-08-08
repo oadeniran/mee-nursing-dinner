@@ -6,7 +6,7 @@ function required(name: string): string {
 }
 
 export const env = {
-  checkoutApiUrl: required("CHECKOUT_API_URL"),
+  checkoutApiBase: required("CHECKOUT_API_URL").replace(/\/+$/, ""),
   callbackBaseUrl: required("CALLBACK_BASE_URL"),
   mongodbUri: required("MONGODB_URI"),
   mongodbDb: process.env.MONGODB_DB ?? "owambe_dinner",

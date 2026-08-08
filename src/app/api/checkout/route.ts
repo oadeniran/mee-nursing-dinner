@@ -122,7 +122,8 @@ export async function POST(req: Request) {
     let orderId = _id.toString();
 
     const callbackUrl = `${env.callbackBaseUrl}/success/${orderId}`;
-    const res = await fetch(env.checkoutApiUrl, {
+    const checkoutUrl = `${env.checkoutApiBase}/checkout-for-mech-dinner`;
+    const res = await fetch(checkoutUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

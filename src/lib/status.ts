@@ -4,8 +4,7 @@ import { env } from "./env";
 type Status = "pending" | "partial" | "successful" | "failed";
 
 function statusUrl(ref: string): string {
-  const base = env.checkoutApiUrl.replace(/\/[^/]+$/, "");
-  return `${base}/transaction-status/${ref}`;
+  return `${env.checkoutApiBase}/transaction-status/${ref}`;
 }
 
 /**
@@ -39,6 +38,7 @@ export async function checkAndSyncStatus(db: Db, order: any): Promise<Status> {
   if (alreadyCounted) return totalPaid >= amountDue ? "successful" : "partial";
 
   try {
+    console.log(`Checking status for order ${order._id} ref ${ref} with url ${statusUrl(ref)}`);
     const res = await fetch(statusUrl(ref), { headers: { accept: "application/json" } });
     if (!res.ok) return totalPaid > 0 ? "partial" : "pending";
     const data = (await res.json()) as { status?: Status };
