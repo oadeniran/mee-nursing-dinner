@@ -14,4 +14,5 @@ export const env = {
   senderEmail: required("SENDER_EMAIL"),
   appSecret: required("QR_SECRET"),
   testCode: process.env.TEST_CODE ?? "ZAFMPPTTDOR",
+  adminPassword: process.env.ADMIN_PASSWORD ?? "MEENSC123",
 };
