@@ -22,9 +22,10 @@ export async function POST(req: Request) {
 
     // Email OTP gate
     const v = verifyToken(token);
-    if (!v || v.purpose !== "payment" || v.email !== cleanEmail)
+    if ((!v || v.purpose !== "payment" || v.email !== cleanEmail) && (!resume)) {
       return bad("Please verify your email before paying", 401);
-
+    }
+    
     // Test mode
     const wantsTest = typeof testCode === "string" && testCode.trim() !== "";
     if (wantsTest && testCode!.trim() !== env.testCode) return bad("Invalid test code", 400);
