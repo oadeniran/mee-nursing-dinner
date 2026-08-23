@@ -28,6 +28,7 @@ export async function POST(req: Request) {
         email: clean,
         attendee: o.attendee, plusOne: o.plusOne,
         seatingRequests: o.seatingRequests ?? [],
+        souvenir: o.souvenir ?? true,
         amountDue, totalPaid, remaining: Math.max(0, amountDue - totalPaid),
       },
     });

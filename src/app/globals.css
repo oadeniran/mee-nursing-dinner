@@ -730,3 +730,9 @@ section { padding: 5rem 1.25rem; }
 .admin-table th { text-align: left; padding: .75rem; background: rgba(212,175,55,.1); color: var(--gold-100); font-weight: 600; white-space: nowrap; }
 .admin-table td { padding: .75rem; border-top: 1px solid rgba(212,175,55,.12); color: var(--cream); vertical-align: top; }
 .cell-sub { font-size: .75rem; color: var(--cream-2); }
+
+/* ---- Ticket upgrade ---- */
+.upgrade-block { margin-top: 1rem; padding-top: 1rem; border-top: 1px dashed rgba(212,175,55,.25); }
+.upgrade-form .up-input { width: 100%; padding: .75rem 1rem; margin-bottom: .5rem; border-radius: 10px; border: 1px solid rgba(212,175,55,.3); background: rgba(255,255,255,.04); color: var(--cream); font-family: var(--font-body); }
+.upgrade-form .up-input:focus { outline: none; border-color: var(--gold-400); }
+.upgrade-actions { display: flex; flex-direction: column; gap: .5rem; margin-top: 1rem; }

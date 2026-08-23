@@ -34,6 +34,8 @@ export async function POST(req: Request) {
         amountDue, totalPaid, remaining,
         matricNo: o.matricNo ?? "",
         attendee: o.attendee, plusOne: o.plusOne,
+        souvenir: o.souvenir ?? true,
+        canUpgrade: o.ticketType === "single" && !o.checkedIn,
         status, test: !!o.test, qr,
       });
     }

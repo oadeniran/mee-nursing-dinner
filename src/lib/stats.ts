@@ -29,6 +29,12 @@ export async function getStats(db: Db) {
   const revenueCollected = all.reduce((sum, o) => sum + (o.totalPaid ?? 0), 0);
   const revenueExpected = all.reduce((sum, o) => sum + (o.amountDue ?? o.ticket ?? 0), 0);
 
+  const souvenirsNeeded = paid.reduce((n, o) => {
+    if (o.dept !== "mee") return n + (o.ticketType === "plusOne" ? 2 : 1); // Nursing always
+    if (o.souvenir === false) return n; // MEE opted out
+    return n + (o.ticketType === "plusOne" ? 2 : 1);
+  }, 0);
+
   const byDept = (key: string) => {
     const list = paid.filter((o) => o.dept === key);
     return {
@@ -48,6 +54,7 @@ export async function getStats(db: Db) {
       checkedIn: paid.filter((o) => o.checkedIn).length,
       revenueCollected,
       revenueExpected,
+      souvenirsNeeded: souvenirsNeeded,
     },
     statusCounts: {
       successful: paid.length,

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { MAIN_COURSES, DESSERTS } from "@/lib/config";
 
 const naira = (n: number) => "₦" + n.toLocaleString();
 
@@ -12,6 +13,7 @@ type Order = {
   deptKey: string; deptLabel: string; ticketType: "single" | "plusOne";
   amountDue: number; totalPaid: number; remaining: number; matricNo: string;
   attendee: Menu; plusOne: Menu | null;
+  souvenir: boolean; canUpgrade: boolean;
   status: "pending" | "partial" | "successful" | "failed"; test: boolean; qr: string | null;
 };
 
@@ -21,6 +23,11 @@ export default function VerifyPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [orders, setOrders] = useState<Order[] | null>(null);
+
+  const [upgradingId, setUpgradingId] = useState<string | null>(null);
+  const [upPlusOne, setUpPlusOne] = useState<Menu>({ name: "", mainCourse: "", dessert: "" });
+  const [upBusy, setUpBusy] = useState(false);
+  const [upError, setUpError] = useState("");
 
   async function check() {
     setLoading(true); setError(""); setOrders(null);
@@ -43,6 +50,27 @@ export default function VerifyPage() {
       email: email.trim(), attendee: o.attendee, plusOne: o.plusOne,
     }));
     router.push("/pay?resume=1");
+  }
+
+  async function submitUpgrade(o: Order) {
+    setUpBusy(true); setUpError("");
+    try {
+      const res = await fetch("/api/upgrade", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim(), plusOne: upPlusOne }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Upgrade failed");
+      // Upgraded — now send them to pay the difference via the resume flow.
+      sessionStorage.setItem("resumeOrder", JSON.stringify({
+        dept: o.deptKey, ticketType: "plusOne", matricNo: o.matricNo,
+        email: email.trim(), attendee: o.attendee,
+        plusOne: upPlusOne,
+      }));
+      router.push("/pay?resume=1");
+    } catch (e) {
+      setUpError(e instanceof Error ? e.message : "Upgrade failed");
+    } finally { setUpBusy(false); }
   }
 
   return (
@@ -110,6 +138,49 @@ export default function VerifyPage() {
                     {paidSome ? `Pay balance (${naira(o.remaining)})` : "Complete payment"}
                   </button>
                 </>
+              )}
+
+              {/* Upgrade single → plus one */}
+              {o.canUpgrade && (
+                <div className="upgrade-block">
+                  {upgradingId !== o.orderId ? (
+                    <button className="link-btn" type="button" onClick={() => { setUpgradingId(o.orderId); setUpError(""); }}>
+                      + Upgrade to Plus One
+                    </button>
+                  ) : (
+                    <div className="upgrade-form">
+                      <p className="otp-hint">Add your plus one — you&apos;ll pay the difference next.</p>
+                      <input
+                        className="up-input"
+                        value={upPlusOne.name}
+                        onChange={(e) => setUpPlusOne({ ...upPlusOne, name: e.target.value })}
+                        placeholder="Plus one's name"
+                      />
+                      <p className="menu-sub">Main course</p>
+                      <div className="radio-row">
+                        {MAIN_COURSES.map((m) => (
+                          <button key={m} type="button" className={`radio-pill ${upPlusOne.mainCourse === m ? "active" : ""}`}
+                            onClick={() => setUpPlusOne({ ...upPlusOne, mainCourse: m })}>{m}</button>
+                        ))}
+                      </div>
+                      <p className="menu-sub">Dessert</p>
+                      <div className="radio-row">
+                        {DESSERTS.map((d) => (
+                          <button key={d} type="button" className={`radio-pill ${upPlusOne.dessert === d ? "active" : ""}`}
+                            onClick={() => setUpPlusOne({ ...upPlusOne, dessert: d })}>{d}</button>
+                        ))}
+                      </div>
+                      {upError && <p className="pay-error">{upError}</p>}
+                      <div className="upgrade-actions">
+                        <button className="pay-submit" disabled={upBusy || !upPlusOne.name.trim() || !upPlusOne.mainCourse || !upPlusOne.dessert}
+                          onClick={() => submitUpgrade(o)} type="button">
+                          {upBusy ? "Upgrading…" : "Upgrade & pay difference"}
+                        </button>
+                        <button className="link-btn" type="button" onClick={() => setUpgradingId(null)}>Cancel</button>
+                      </div>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           );

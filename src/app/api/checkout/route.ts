@@ -12,11 +12,11 @@ export async function POST(req: Request) {
     const body = await req.json();
     const {
       dept, ticketType, matricNo, email, attendee, plusOne, token, testCode,
-      seatingRequests, payNow, resume // payNow: amount (₦) the user wants to pay this round
+      seatingRequests, payNow, resume, souvenir // payNow: amount (₦) the user wants to pay this round
     } = body as {
       dept: Dept; ticketType: TicketType; matricNo: string; email: string;
       attendee: MenuChoice; plusOne: MenuChoice | null; token: string; testCode?: string;
-      seatingRequests?: { label: string; value: string }[]; payNow?: number; resume?: boolean
+      seatingRequests?: { label: string; value: string }[]; payNow?: number; resume?: boolean; souvenir?: boolean 
     };
     const cleanEmail = String(email || "").trim().toLowerCase();
 
@@ -39,8 +39,10 @@ export async function POST(req: Request) {
     if (ticketType === "plusOne" && (!plusOne?.name?.trim() || !validMenu(plusOne)))
       return bad("Invalid plus-one details");
 
-    const ticket = PRICING[dept][ticketType];
-    const amountDue = ticket; // fee is NOT part of what they owe — it's the provider's, per transaction
+    // Souvenir opt-out is MEE-only; everyone else always gets it.
+    const wantsSouvenir = dept === "mee" ? souvenir !== false : true;
+    const ticket = PRICING[dept][ticketType] - (dept === "mee" && !wantsSouvenir ? 10000 : 0);
+    const amountDue = ticket; // fee is per-transaction, added on top later
 
     const db = await getDb();
     const orders = db.collection("orders");
@@ -84,7 +86,7 @@ export async function POST(req: Request) {
       dept, deptLabel: DEPARTMENTS[dept].label, ticketType,
       matricNo: matricNo.trim(), email: cleanEmail,
       attendee, plusOne: ticketType === "plusOne" ? plusOne : null,
-      ticket, amountDue, test: isTest, updatedAt: new Date(),
+      ticket, amountDue,  souvenir: wantsSouvenir, test: isTest, updatedAt: new Date(),
       seatingRequests: cleanSeating,
     };
 

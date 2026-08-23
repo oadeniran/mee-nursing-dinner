@@ -37,6 +37,7 @@ export default function AdminDashboard({ stats }: { stats: any }) {
           <Stat label="Checked in" value={`${h.checkedIn} / ${h.guestsExpected}`} />
           <Stat label="Collected" value={naira(h.revenueCollected)} />
           <Stat label="Expected (paid+partial)" value={naira(h.revenueExpected)} />
+          <Stat label="Souvenirs needed" value={h.souvenirsNeeded ?? 0} />
         </div>
 
         {/* Departments */}

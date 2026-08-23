@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   DEPARTMENTS, MAIN_COURSES, DESSERTS,
-  totalAmount, ticketPrice, feeFor, MAX_SEATING_REQUESTS,
+  totalAmount, ticketPrice, feeFor, supportsSouvenirOptOut, SOUVENIR_DISCOUNT, MAX_SEATING_REQUESTS,
   type Dept, type TicketType,
 } from "@/lib/config";
 
@@ -48,6 +48,8 @@ export default function PayPage() {
   type SeatReq = { label: string; value: string };
   const [seating, setSeating] = useState<SeatReq[]>([{ label: "", value: "" }]);
 
+  const [souvenir, setSouvenir] = useState(true); // default: include it
+
   const updateSeat = (i: number, field: keyof SeatReq, v: string) =>
     setSeating((s) => s.map((row, idx) => (idx === i ? { ...row, [field]: v } : row)));
   const addSeat = () =>
@@ -68,8 +70,9 @@ export default function PayPage() {
     menuOk(attendee) && (!needsPlus || menuOk(plusOne));
   const canPay = formOk && otpVerified && !loading;
   // What the user will actually pay this round, and the ceiling.
+  const effectivePrice = dept && ticketType ? ticketPrice(dept, ticketType, souvenir) : 0;
   const maxPayable = dept && ticketType
-    ? (isResume && ledger ? ledger.remaining : ticketPrice(dept, ticketType))
+    ? (isResume && ledger ? ledger.remaining : effectivePrice)
     : 0;
   const instalment = payNow.trim() ? Math.min(Number(payNow), maxPayable) : maxPayable;
   const instalmentFee = feeFor(instalment);
@@ -104,6 +107,10 @@ export default function PayPage() {
       if (r.email) setEmail(r.email); // last, so the OTP-reset effect runs clean
     } catch {}
   }, []);
+
+  useEffect(() => {
+    if (dept !== "mee") setSouvenir(true); // only MEE can opt out
+  }, [dept]);
 
   async function sendOtp() {
     setOtpBusy(true); setOtpError("");
@@ -149,6 +156,7 @@ export default function PayPage() {
       setDept(o.dept); setTicketType(o.ticketType); setMatricNo(o.matricNo);
       setAttendee(o.attendee); setPlusOne(o.plusOne || emptyMenu());
       setEmail(o.email);
+      setSouvenir(o.souvenir);
       setSeating(o.seatingRequests?.length ? o.seatingRequests : [{ label: "", value: "" }]);
       setLedger({ amountDue: o.amountDue, totalPaid: o.totalPaid, remaining: o.remaining });
       setIsResume(true);
@@ -173,6 +181,7 @@ export default function PayPage() {
           seatingRequests: cleanedSeating,
           payNow: payNow.trim() ? Number(payNow) : undefined,
           resume: isResume || undefined,
+          souvenir
         }),
       });
       const data = await res.json();
@@ -238,6 +247,22 @@ export default function PayPage() {
                       <div className="opt-price">{naira(ticketPrice(dept, t))}</div>
                     </button>
                   ))}
+                </div>
+              </div>
+            )}
+
+            {dept && ticketType && supportsSouvenirOptOut(dept) && (
+              <div className="step">
+                <span className="step-label">Include the souvenir?</span>
+                <div className="opt-grid">
+                  <button type="button" className={`opt ${souvenir ? "active" : ""}`} onClick={() => setSouvenir(true)}>
+                    <div className="opt-title">With Souvenir</div>
+                    <div className="muted">{naira(ticketPrice(dept, ticketType, true))}</div>
+                  </button>
+                  <button type="button" className={`opt ${!souvenir ? "active" : ""}`} onClick={() => setSouvenir(false)}>
+                    <div className="opt-title">No Souvenir</div>
+                    <div className="muted">{naira(ticketPrice(dept, ticketType, false))} · save {naira(SOUVENIR_DISCOUNT)}</div>
+                  </button>
                 </div>
               </div>
             )}
@@ -336,8 +361,8 @@ export default function PayPage() {
                   </>
                 ) : (
                   <>
-                    <div className="summary-row"><span>Ticket ({ticketType === "single" ? "Solo" : "Plus One"})</span><span>{naira(ticketPrice(dept, ticketType))}</span></div>
-                    <div className="summary-total"><span>Ticket total</span><span>{naira(ticketPrice(dept, ticketType))}</span></div>
+                    <div className="summary-row"><span>Ticket ({ticketType === "single" ? "Solo" : "Plus One"}{dept === "mee" && !souvenir ? ", no souvenir" : ""})</span><span>{naira(ticketPrice(dept, ticketType, souvenir))}</span></div>
+                    <div className="summary-total"><span>Ticket total</span><span>{naira(ticketPrice(dept, ticketType, souvenir))}</span></div>
                     <p className="fee-note">A transaction fee of 1% (max ₦300) is added on top of each payment. Paying in more instalments means the fee applies to each one.</p>
                   </>
                 )}
