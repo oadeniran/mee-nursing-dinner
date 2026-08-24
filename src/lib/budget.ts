@@ -1,4 +1,4 @@
-import { Db } from "mongodb";
+import { Db, UpdateFilter, Document } from "mongodb";
 
 // Fixed costs — seeded in code so they can't be casually edited in the UI.
 // Update these values here as prices finalise.
@@ -32,7 +32,9 @@ export async function getBudgetState(db: Db): Promise<{ catered: string[] }> {
 
 export async function setCatered(db: Db, itemId: string, catered: boolean) {
   if (!FIXED_ITEMS.some((i) => i.id === itemId)) throw new Error("Unknown item");
-  const op = catered ? { $addToSet: { catered: itemId } } : { $pull: { catered: itemId } };
+  const op: UpdateFilter<Document> = catered
+    ? { $addToSet: { catered: itemId } }
+    : { $pull: { catered: itemId } as unknown as UpdateFilter<Document>["$pull"] };
   await db.collection("meta").updateOne({ _id: "budget" as never }, op, { upsert: true });
 }
 
