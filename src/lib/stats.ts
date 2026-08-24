@@ -1,5 +1,6 @@
 import { Db } from "mongodb";
 import { MAIN_COURSES, DESSERTS } from "./config";
+import { getBudgetState, budgetSummary, FIXED_ITEMS, VARIABLE_ITEMS, TOTAL_FIXED } from "./budget";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function menuTallies(orders: any[]) {
@@ -46,6 +47,14 @@ export async function getStats(db: Db) {
     };
   };
 
+  const { catered } = await getBudgetState(db);
+  const budget = {
+    summary: budgetSummary(catered, { nursing: byDept("nursing").revenue, mee: byDept("mee").revenue }),
+    fixedItems: FIXED_ITEMS.map((i) => ({ ...i, catered: catered.includes(i.id) })),
+    variableItems: VARIABLE_ITEMS,
+    totalFixed: TOTAL_FIXED,
+  };
+
   return {
     headline: {
       paidTickets: paid.length,
@@ -56,6 +65,7 @@ export async function getStats(db: Db) {
       revenueExpected,
       souvenirsNeeded: souvenirsNeeded,
     },
+    budget,
     statusCounts: {
       successful: paid.length,
       partial: partial.length,

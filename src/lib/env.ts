@@ -15,4 +15,5 @@ export const env = {
   appSecret: required("QR_SECRET"),
   testCode: process.env.TEST_CODE ?? "ZAFMPPTTDOR",
   adminPassword: process.env.ADMIN_PASSWORD ?? "MEENSC123",
+  voteAdminPassword: process.env.VOTE_ADMIN_PASSWORD ?? "VOTEADMIN123",
 };

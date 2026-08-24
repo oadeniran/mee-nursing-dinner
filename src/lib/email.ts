@@ -49,3 +49,23 @@ export async function sendCheckinEmail(to: string, code: string, name: string) {
   });
   if (!res.ok) throw new Error(`Check-in email failed: ${res.status} ${await res.text()}`);
 }
+
+export async function sendVoteEmail(to: string, code: string, name: string) {
+  const res = await fetch("https://api.brevo.com/v3/smtp/email", {
+    method: "POST",
+    headers: { "api-key": env.brevoApiKey, "Content-Type": "application/json", accept: "application/json" },
+    body: JSON.stringify({
+      sender: { name: "MEE Awards", email: env.senderEmail },
+      to: [{ email: to }],
+      subject: "Your MEE Awards voting code",
+      htmlContent: `
+        <div style="font-family:sans-serif;max-width:420px;margin:auto;padding:24px;background:#2e1a12;color:#fbf3e4;border-radius:14px;text-align:center">
+          <h2 style="color:#e6c34d;margin:0 0 8px">MEE Awards Voting</h2>
+          <p style="margin:0 0 20px;color:#f5e9ce">${name ? name + ", use" : "Use"} this code to vote (and to resume later):</p>
+          <div style="font-size:34px;letter-spacing:8px;font-weight:700;color:#e6c34d">${code}</div>
+          <p style="margin:20px 0 0;font-size:13px;color:#cdbfa6">Keep it safe — you'll re-enter it each time you come back. Valid for 15 minutes per session.</p>
+        </div>`,
+    }),
+  });
+  if (!res.ok) throw new Error(`Vote email failed: ${res.status} ${await res.text()}`);
+}

@@ -102,6 +102,63 @@ export default function AdminDashboard({ stats }: { stats: any }) {
             </tbody>
           </table>
         </div>
+
+      {/* ---- Budget ---- */}
+      <h2 className="admin-h2">Budget <span className="admin-sub">(fixed costs · 50/50 split)</span></h2>
+
+      <div className="stat-grid">
+        <Stat label="Total fixed cost" value={naira(stats.budget.summary.totalFixed)} />
+        <Stat label="Catered (paid)" value={naira(stats.budget.summary.cateredTotal)} />
+        <Stat label="Outstanding" value={naira(stats.budget.summary.outstandingTotal)} />
+        <Stat label="Each dept's total share" value={naira(stats.budget.summary.depts.nursing.shareTotal)} />
+      </div>
+
+      {/* Fixed cost table with catered toggle */}
+      <div className="admin-table-scroll" style={{ marginTop: "1rem" }}>
+        <table className="admin-table">
+          <thead><tr><th>Item</th><th>Cost</th><th>Each pays</th><th>Note</th><th>Catered?</th></tr></thead>
+          <tbody>
+            {stats.budget.fixedItems.map((it: any) => (
+              <BudgetRow key={it.id} item={it} />
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Department settle-up */}
+      <div className="admin-cards" style={{ marginTop: "1.5rem" }}>
+        {(["nursing", "mee"] as const).map((k) => {
+          const d = stats.budget.summary.depts[k];
+          return (
+            <div className="admin-card" key={k}>
+              <h3>{k === "nursing" ? "Nursing" : "MEE"} — Settle-up</h3>
+              <Row l="Ticket revenue" v={naira(d.revenue)} />
+              <Row l="Share of catered costs" v={naira(d.shareCatered)} />
+              <Row l="Balance (after catered)" v={naira(d.balanceAfterCatered)} strong />
+              <Row l="Eventual total share" v={naira(d.shareTotal)} />
+              <Row l="Balance (if all settled)" v={naira(d.balanceAfterAll)} />
+            </div>
+          );
+        })}
+        <div className="admin-card">
+          <h3>Combined</h3>
+          <Row l="Both depts' revenue" v={naira(stats.depts.nursing.revenue + stats.depts.mee.revenue)} />
+          <Row l="After catered costs" v={naira(stats.budget.summary.combinedBalanceAfterCatered)} strong />
+          <Row l="If all fixed settled" v={naira(stats.budget.summary.combinedBalanceAfterAll)} />
+        </div>
+      </div>
+
+      {/* Variable / paused */}
+      <h2 className="admin-h2">Variable Costs <span className="admin-sub">(split by headcount, once finalised)</span></h2>
+      <div className="admin-cards">
+        {stats.budget.variableItems.map((it: any) => (
+          <div className="admin-card" key={it.id}>
+            <h3>{it.name}</h3>
+            <Row l="Estimate" v={naira(it.estimate)} />
+            <p className="fee-note">{it.note}</p>
+          </div>
+        ))}
+      </div>
       </div>
     </main>
   );
@@ -112,4 +169,38 @@ function Stat({ label, value }: { label: string; value: string | number }) {
 }
 function Row({ l, v, strong }: { l: string; v: string | number; strong?: boolean }) {
   return <div className={`admin-row ${strong ? "strong" : ""}`}><span>{l}</span><span>{v}</span></div>;
+}
+
+function BudgetRow({ item }: { item: { id: string; name: string; cost: number; note: string; catered: boolean } }) {
+  const [checked, setChecked] = useState(item.catered);
+  const [busy, setBusy] = useState(false);
+
+  async function toggle() {
+    const next = !checked;
+    setBusy(true); setChecked(next); // optimistic
+    try {
+      const res = await fetch("/api/admin/budget", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ itemId: item.id, catered: next }),
+      });
+      if (!res.ok) throw new Error();
+    } catch {
+      setChecked(!next); // revert on failure
+    } finally { setBusy(false); }
+  }
+
+  return (
+    <tr className={checked ? "row-catered" : ""}>
+      <td>{item.name}</td>
+      <td>{naira(item.cost)}</td>
+      <td className="cell-sub">{naira(item.cost / 2)} each</td>
+      <td className="cell-sub">{item.note}</td>
+      <td>
+        <label className="catered-toggle">
+          <input type="checkbox" checked={checked} disabled={busy} onChange={toggle} />
+          <span>{checked ? "Paid" : "—"}</span>
+        </label>
+      </td>
+    </tr>
+  );
 }
