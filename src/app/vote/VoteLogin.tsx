@@ -89,6 +89,7 @@ export default function VoteLogin() {
             <li><strong>Click Save votes.</strong> Nothing counts until you save.</li>
             <li><strong>Change your mind anytime.</strong> Come back with the same code and update your picks — whatever&apos;s saved when voting closes is final.</li>
           </ol>
+          <p className="vote-deadline">⏰ Voting closes at <strong>11:59 PM on 7th September</strong>.</p>
         </div>
       </div>
     </main>

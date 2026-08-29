@@ -77,7 +77,7 @@ export default function VoteBallot() {
           <p className="awards-brand">APOTHEOSIS de Me🅒anicos</p>
           <p className="awards-kicker">Class Awards</p>
           <h1>Cast Your <span className="gold-text">Votes</span></h1>
-          <p className="muted">One pick per category. Tap a name to select, tap again to clear. You can change until voting closes.</p>
+          <p className="muted">One pick per category. Tap a name to select, tap again to clear. Clicking Save votes will save your choices. You can change until voting closes.</p>
         </div>
 
         <div className="vote-info-note">

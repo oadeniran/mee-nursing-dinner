@@ -852,3 +852,12 @@ section { padding: 5rem 1.25rem; }
   line-height: 1.5;
 }
 .how-to-vote strong { color: var(--gold-300); }
+
+.vote-deadline {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(212,175,55,.2);
+  color: var(--gold-100);
+  font-size: .92rem;
+}
+.vote-deadline strong { color: var(--gold-300); }
