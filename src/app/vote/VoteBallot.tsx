@@ -74,8 +74,14 @@ export default function VoteBallot() {
       </header>
       <div className="pay-wrap">
         <div className="pay-head">
+          <p className="awards-brand">APOTHEOSIS de Me🅒anicos</p>
+          <p className="awards-kicker">Class Awards</p>
           <h1>Cast Your <span className="gold-text">Votes</span></h1>
           <p className="muted">One pick per category. Tap a name to select, tap again to clear. You can change until voting closes.</p>
+        </div>
+
+        <div className="vote-info-note">
+          Are you a nominee and want your name displayed differently? Reach out to <strong>Owolabi</strong> to have it changed. The name displayed here is what will be on the awards
         </div>
 
         {!open && <div className="mee-note"><strong>Voting is closed.</strong> Your saved votes are final — thanks for participating.</div>}

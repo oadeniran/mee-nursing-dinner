@@ -15,36 +15,36 @@ export const AWARD_CATEGORIES: Cat[] = [
     "Divine", "FillaaSurvey (Qari)", "Hilaq (Fareed)", "Shmeg", "Skrittles", "SpicebyDee",
   ]},
   { id: "best-dressed-male", title: "Best Dressed Male", enabled: true, dept: "mee", candidates: [
-    "Adeoye Samuel", "Austin", "Daniel", "Fareed", "Ileri", "Israel", "Olalekan",
+    "Adeoye Samuel", "Austin", "Werner (Daniel)", "Fareed", "Ileri", "Israel", "Olalekan",
     "Prolific", "Pythagoras", "Raphy", "Sly", "Toles", "Tomisin",
   ]},
   { id: "best-dressed-female", title: "Best Dressed Female", enabled: true, dept: "mee", candidates: [
-    "Divine", "Fathia", "Jessica", "Pelumi", "Temi", "Treasure",
+    "Divine", "Fathia", "Jessica", "Temi", "Treasure",
   ]},
   { id: "most-sociable-male", title: "Most Sociable Male", enabled: true, dept: "mee", candidates: [
-    "Daniel", "La wandzy", "Owoblow", "Sly", "Tomisin",
+    "Werner (Daniel)", "La wandzy", "Owoblow", "Sly", "Tomisin",
   ]},
   { id: "most-sociable-female", title: "Most Sociable Female", enabled: true, dept: "mee", candidates: [
     "Deborah", "Divine", "Fathia", "Jessica", "Temi", "Treasure",
   ]},
   { id: "most-influential", title: "Most Influential", enabled: true, dept: "mee", candidates: [
-    "Boye Lala", "John (Class rep)", "Owoblow", "Tomisin",
+    "Boye Lala", "El John", "Owoblow", "Tomisin",
   ]},
   { id: "most-reliable", title: "Most Reliable", enabled: true, dept: "mee", candidates: [
-    "DHO", "Divine", "El John", "Maayor", "Owoblow", "Philip",
+    "DHO", "Divine", "El John", "Mayor", "Owoblow", "Philip",
   ]},
   { id: "best-sportsman", title: "Best Sportsman", enabled: true, dept: "mee", candidates: [
-    "Adelaja", "Daniel", "Idowu", "John Nelson",
+    "Adelaja", "Werner (Daniel)", "Id", "John",
   ]},
   { id: "academia-of-the-year", title: "Academia of the Year", enabled: true, dept: "mee", candidates: [
     "Austin", "Boye LaLa", "DHO", "Fashakin", "Fola", "George Falcon",
-    "Ileri", "Israel", "John (Class rep)", "Sholu", "Zizo Trader",
+    "Ileri", "Israel", "El John", "Mayor", "Zizo Trader",
   ]},
   { id: "money-bag", title: "Money Bag", enabled: true, dept: "mee", candidates: [
-    "George Falcon", "Habeeb", "Jessica", "Owoblow", "Shmeg", "Toles",
+    "George Falcon", "Habeeb", "Jessica", "Owoblow", "ShmeG", "Toles",
   ]},
   { id: "political-icon", title: "Political Icon", enabled: true, dept: "mee", candidates: [
-    "Abimifoluwa", "Daniel (Almost Gen Sec)", "Fareed", "Fathia", "Francis",
+    "Abimifoluwa", "Werner (Daniel)", "Fareed", "Fathia", "Francis",
     "Mastermind (Bukola)", "Owoblow", "Tomisin",
   ]},
   { id: "best-clique", title: "Best Clique", enabled: true, dept: "mee", candidates: [
@@ -52,7 +52,7 @@ export const AWARD_CATEGORIES: Cat[] = [
     "Toles x Hmoney", "Zizo Trader Family",
   ]},
   // Not finalised — flip enabled:true on vote-admin when ready.
-  { id: "best-in-fooling", title: "Best in Fooling", enabled: false, dept: "mee", candidates: [] },
+  { id: "best-in-fooling", title: "Best in Fooling", enabled: true, dept: "mee", candidates: ["ID", "El John", "Boye Lala", "Damex"] },
 ];
 
 export const categoriesFor = (dept: string) => AWARD_CATEGORIES.filter((c) => c.dept === dept);
