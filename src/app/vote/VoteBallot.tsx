@@ -81,7 +81,7 @@ export default function VoteBallot() {
         </div>
 
         <div className="vote-info-note">
-          Are you a nominee and want your name displayed differently? Reach out to <strong>Owolabi</strong> to have it changed. The name displayed here is what will be on the awards
+          Are you a nominee and want your name displayed differently? Reach out to <strong>Owolabi</strong> to have it changed. First Name+ Last Name is what will be on final awards. If you win but have not paid for dinner by the deadline for ticket payment <strong>1 week before dinner</strong>, then the award is passed to next nominnee that is present. Voting closes at <strong>11:59pm on 7th of September</strong> and results will be announced at the dinner.
         </div>
 
         {!open && <div className="mee-note"><strong>Voting is closed.</strong> Your saved votes are final — thanks for participating.</div>}
