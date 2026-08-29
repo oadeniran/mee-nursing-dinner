@@ -78,6 +78,18 @@ export default function VoteLogin() {
           </>
         )}
         {error && <p className="pay-error">{error}</p>}
+
+        <div className="how-to-vote">
+          <h3>How voting works</h3>
+          <ol>
+            <li><strong>Enter your matric number</strong> — this confirms you&apos;re a class member.</li>
+            <li><strong>Get your code.</strong> First time voting? A 6-digit code is sent to your school email. Returning? Use the same code that was emailed to you before.</li>
+            <li><strong>No email access?</strong> Reach out to Owolabi and he&apos;ll give you your code.</li>
+            <li><strong>Make your picks</strong> — one choice per category. Tap a name to select, tap again to clear if you&apos;d rather skip a category.</li>
+            <li><strong>Click Save votes.</strong> Nothing counts until you save.</li>
+            <li><strong>Change your mind anytime.</strong> Come back with the same code and update your picks — whatever&apos;s saved when voting closes is final.</li>
+          </ol>
+        </div>
       </div>
     </main>
   );

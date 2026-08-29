@@ -824,3 +824,31 @@ section { padding: 5rem 1.25rem; }
   color: var(--cream-2);
   margin-bottom: 1.25rem;
 }
+
+/* ---- How to vote ---- */
+.how-to-vote {
+  margin-top: 2rem;
+  padding: 1.25rem 1.4rem;
+  border: 1px solid rgba(212,175,55,.25);
+  border-radius: 14px;
+  background: rgba(212,175,55,.05);
+}
+.how-to-vote h3 {
+  font-family: var(--font-display);
+  color: var(--gold-100);
+  font-size: 1.15rem;
+  margin-bottom: .9rem;
+}
+.how-to-vote ol {
+  margin: 0;
+  padding-left: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: .7rem;
+}
+.how-to-vote li {
+  color: var(--cream-2);
+  font-size: .9rem;
+  line-height: 1.5;
+}
+.how-to-vote strong { color: var(--gold-300); }
