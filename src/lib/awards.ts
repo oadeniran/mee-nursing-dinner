@@ -12,7 +12,7 @@ export const AWARD_CATEGORIES: Cat[] = [
     "Tofunmi", "Tommy-Jay", "Zacheous",
   ]},
   { id: "best-entrepreneur", title: "Best Entrepreneur", enabled: true, dept: "mee", candidates: [
-    "Adelaja (Durjo)", "Afeez (SpicebyDee)", "Divine (Cakes)", "Fareed (Hilaq)",
+    "Adelaja (Durajo)", "Afeez (SpicebyDee)", "Divine (Cakes)", "Fareed (Hilaq)",
     "Jessica (Skrittles)", "Korede (CoreRay)", "Qari (FillASurvey)", "ShmeG (ShmeG Inventories)",
   ]},
   { id: "best-dressed-male", title: "Best Dressed Male", enabled: true, dept: "mee", candidates: [
@@ -50,7 +50,7 @@ export const AWARD_CATEGORIES: Cat[] = [
     "Mstack", "Owoblow", "Qari", "Tomisin", "Werner (Daniel)",
   ]},
   { id: "best-clique", title: "Best Clique", enabled: true, dept: "mee", candidates: [
-    "Femzi Nation", "Kabal", "Matrix", "MIT", "Samuel and Fashakin",
+    "Femzi Nation", "Kabal", "Matrix", "MIT", "Fashakin x Samuel x Fareed",
     "Toles x Hmoney", "Zizo Trader Family",
   ]},
   { id: "best-in-fooling", title: "Best in Fooling", enabled: true, dept: "mee", candidates: [
