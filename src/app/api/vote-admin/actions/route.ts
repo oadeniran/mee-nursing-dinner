@@ -51,6 +51,16 @@ export async function POST(req: Request) {
       case "toggleCategory":
         await setCategoryEnabled(db, dept, body.catId, body.enabled === true);
         return NextResponse.json({ ok: true });
+            case "publishResults": {
+        await db.collection("meta").updateOne({ _id: `results:${dept}` as never },
+          { $set: { published: body.published === true } }, { upsert: true });
+        return NextResponse.json({ ok: true, published: body.published === true });
+      }
+      case "revealNames": {
+        await db.collection("meta").updateOne({ _id: `results:${dept}` as never },
+          { $set: { revealNames: body.reveal === true } }, { upsert: true });
+        return NextResponse.json({ ok: true, revealNames: body.reveal === true });
+      }
       default:
         return NextResponse.json({ error: "Unknown action" }, { status: 400 });
     }

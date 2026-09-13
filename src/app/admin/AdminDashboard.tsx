@@ -4,6 +4,22 @@ import { useState } from "react";
 
 const naira = (n: number) => "₦" + n.toLocaleString();
 
+// Build and trigger a CSV download from rows of objects.
+  function downloadCsv(filename: string, headers: string[], rows: (string | number)[][]) {
+    const esc = (v: string | number) => {
+      const s = String(v ?? "");
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const csv = [headers, ...rows].map((r) => r.map(esc).join(",")).join("\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" }); // BOM for Excel
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export default function AdminDashboard({ stats }: { stats: any }) {
   const [q, setQ] = useState("");
@@ -19,6 +35,35 @@ export default function AdminDashboard({ stats }: { stats: any }) {
   async function logout() {
     await fetch("/api/admin/login", { method: "DELETE" });
     window.location.reload();
+  }
+
+    // Paid, non-test orders only.
+  const paidOrders = stats.orders.filter((o: any) => o.status === "successful");
+
+  function exportSouvenirs() {
+    const rows = paidOrders
+      .filter((o: any) => o.deptKey === "mee" && o.souvenir !== false) // MEE, opted in
+      .map((o: any) => [o.name, o.matricNo, o.email]);
+    downloadCsv("souvenir-recipients.csv", ["Name", "Matric No", "Email"], rows);
+  }
+
+  function exportAttendees(deptKey?: "mee" | "nursing") {
+    const rows = paidOrders
+      .filter((o: any) => !deptKey || o.deptKey === deptKey)
+      .map((o: any) => [
+        o.name,
+        o.matricNo,
+        o.dept,
+        o.ticketType === "plusOne" ? "Plus One" : "Solo",
+        o.plusOneName ?? "",
+        o.email,
+      ]);
+    const label = deptKey === "mee" ? "mee" : deptKey === "nursing" ? "nursing" : "all";
+    downloadCsv(
+      `paid-attendees-${label}.csv`,
+      ["Name", "Matric No", "Department", "Ticket", "Plus One Name", "Email"],
+      rows
+    );
   }
 
   return (
@@ -39,6 +84,28 @@ export default function AdminDashboard({ stats }: { stats: any }) {
           <Stat label="Expected (paid+partial)" value={naira(h.revenueExpected)} />
           <Stat label="Souvenirs needed" value={h.souvenirsNeeded ?? 0} />
         </div>
+
+        {/* ---- Data exports ---- */}
+        <h2 className="admin-h2">Export Data</h2>
+        <div className="export-grid">
+          <div className="export-card">
+            <h3>Souvenir recipients</h3>
+            <p className="admin-sub">MEE attendees who opted in — one per ticket.</p>
+            <button className="pay-submit ghost" onClick={exportSouvenirs} type="button">
+              Download CSV
+            </button>
+          </div>
+          <div className="export-card">
+            <h3>Paid attendees</h3>
+            <p className="admin-sub">Everyone who paid, with department column.</p>
+            <div className="export-btns">
+              <button className="pay-submit ghost" onClick={() => exportAttendees()} type="button">All</button>
+              <button className="pay-submit ghost" onClick={() => exportAttendees("mee")} type="button">MEE only</button>
+              <button className="pay-submit ghost" onClick={() => exportAttendees("nursing")} type="button">Nursing only</button>
+            </div>
+          </div>
+      </div>
+        
 
         {/* Departments */}
         <h2 className="admin-h2">By Department</h2>

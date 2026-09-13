@@ -2,6 +2,19 @@
 
 import { useState } from "react";
 
+function downloadCsv(filename: string, headers: string[], rows: (string | number)[][]) {
+  const esc = (v: string | number) => {
+    const s = String(v ?? "");
+    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+  const csv = [headers, ...rows].map((r) => r.map(esc).join(",")).join("\n");
+  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export default function VoteAdminDashboard({ stats, manage }: { stats: any; manage: any[] }) {
   const [open, setOpen] = useState(stats.open);
@@ -9,6 +22,7 @@ export default function VoteAdminDashboard({ stats, manage }: { stats: any; mana
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [voter, setVoter] = useState<any>(null);
   const [lookupErr, setLookupErr] = useState("");
+  const [published, setPublished] = useState(false);
   const [tab, setTab] = useState<"results" | "voters" | "candidates">("results");
 
   async function act(body: Record<string, unknown>) {
@@ -17,6 +31,23 @@ export default function VoteAdminDashboard({ stats, manage }: { stats: any; mana
       body: JSON.stringify({ dept: stats.dept, ...body }),
     });
     return res.json();
+  }
+
+    function exportWinners() {
+    const rows: (string | number)[][] = [];
+    for (const cat of stats.tallies) {
+      const ranked = [...cat.rows].sort((a: any, b: any) => b.votes - a.votes);
+      const first = ranked[0];
+      const second = ranked[1];
+      rows.push([
+        cat.title,
+        first?.name ?? "—", first?.votes ?? 0,
+        second?.name ?? "—", second?.votes ?? 0,
+      ]);
+    }
+    downloadCsv("award-winners.csv",
+      ["Category", "Winner", "Winner Votes", "Runner-up", "Runner-up Votes"],
+      rows);
   }
 
   async function toggleVoting() {
@@ -50,6 +81,16 @@ export default function VoteAdminDashboard({ stats, manage }: { stats: any; mana
             <strong>Voting is {open ? "OPEN" : "CLOSED"}</strong>
             <p className="muted">{open ? "Members can cast and change votes." : "Ballots are locked. No changes accepted."}</p>
           </div>
+
+          <div>
+            <strong>Public results: {published ? "PUBLISHED" : "hidden"}</strong>
+            <p className="muted">
+              {published
+                ? <>Live at <a className="gold-text" href={`/results/${stats.dept}`} target="_blank" rel="noopener noreferrer">/results/{stats.dept}</a></>
+                : "The public results page is hidden until you publish."}
+            </p>
+          </div>
+
           <button className="pay-submit" style={{ width: "auto", margin: 0 }} onClick={toggleVoting} type="button">
             {open ? "Close voting" : "Open voting"}
           </button>
@@ -65,6 +106,13 @@ export default function VoteAdminDashboard({ stats, manage }: { stats: any; mana
           <button className={tab === "voters" ? "active" : ""} onClick={() => setTab("voters")}>Voter lookup</button>
           <button className={tab === "candidates" ? "active" : ""} onClick={() => setTab("candidates")}>Candidates</button>
         </div>
+
+        {tab === "results" && (
+          <button className="pay-submit ghost" style={{ width: "auto", marginBottom: "1.5rem" }}
+            onClick={exportWinners} type="button">
+            Download winners CSV
+          </button>
+        )}       
 
         {/* RESULTS */}
         {tab === "results" && stats.tallies.map((cat: any) => (

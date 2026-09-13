@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 
-// Event start — red carpet, 8:00 PM WAT on Sept 18, 2026.
+// Event start — red carpet, 8:00 PM WAT on Sept 21, 2026.
 // The +01:00 is West Africa Time so it counts down correctly regardless of the viewer's timezone.
-const EVENT_TIME = new Date("2026-09-18T20:00:00+01:00").getTime();
+const EVENT_TIME = new Date("2026-09-21T20:00:00+01:00").getTime();
 
 function parts(ms: number) {
   const clamp = Math.max(0, ms);

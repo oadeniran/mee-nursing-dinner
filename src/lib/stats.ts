@@ -31,9 +31,9 @@ export async function getStats(db: Db) {
   const revenueExpected = all.reduce((sum, o) => sum + (o.amountDue ?? o.ticket ?? 0), 0);
 
   const souvenirsNeeded = paid.reduce((n, o) => {
-    if (o.dept !== "mee") return n + (o.ticketType === "plusOne" ? 2 : 1); // Nursing always
-    if (o.souvenir === false) return n; // MEE opted out
-    return n + (o.ticketType === "plusOne" ? 2 : 1);
+    if (o.dept !== "mee") return n;        // Nursing gets no souvenir
+    if (o.souvenir === false) return n;    // MEE opted out
+    return n + 1;                          // one per opted-in MEE ticket (plus-one doesn't add another)
   }, 0);
 
   const byDept = (key: string) => {
@@ -79,6 +79,7 @@ export async function getStats(db: Db) {
       name: o.attendee?.name ?? "",
       plusOneName: o.plusOne?.name ?? null,
       dept: o.deptLabel ?? o.dept ?? "",
+      deptKey: o.dept ?? "",              // raw key for filtering (mee/nursing)
       ticketType: o.ticketType,
       main: o.attendee?.mainCourse ?? "",
       dessert: o.attendee?.dessert ?? "",
@@ -89,6 +90,7 @@ export async function getStats(db: Db) {
       tableNumber: o.tableNumber ?? null,
       email: o.email ?? "",
       matricNo: o.matricNo ?? "",
+      souvenir: o.souvenir !== false,     // opted-in unless explicitly false
     })),
   };
 }

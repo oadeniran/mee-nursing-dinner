@@ -118,21 +118,21 @@ export default function Home() {
           <p className="hero-desc">A Night of Good Food &amp; Owambe Vibes</p>
 
           <div className="hero-meta">
-            <span>📅 September 18, 2026</span>
+            <span>📅 September 22, 2026</span>
             <span>📍 Ifeloju, OAU Campus</span>
           </div>
 
           <div className="timeline">
             <div>
-              <strong>XX:XX PM</strong>
+              <strong>06:00 PM</strong>
               <span>Red Carpet</span>
             </div>
             <div>
-              <strong>XX:XX PM</strong>
+              <strong>06:00 PM</strong>
               <span>360 Camera</span>
             </div>
             <div>
-              <strong>XX:XX PM</strong>
+              <strong>08:00 PM</strong>
               <span>Main Event</span>
             </div>
           </div>
