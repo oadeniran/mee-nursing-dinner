@@ -1,6 +1,8 @@
 import { Db } from "mongodb";
 import { MAIN_COURSES, DESSERTS } from "./config";
 import { getBudgetState, budgetSummary, FIXED_ITEMS, VARIABLE_ITEMS, TOTAL_FIXED } from "./budget";
+import { getFoodPrices, personFoodCost } from "./food-config";
+import { getExpenses, expenseSummary } from "./budget"; 
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function menuTallies(orders: any[]) {
@@ -47,12 +49,74 @@ export async function getStats(db: Db) {
     };
   };
 
+  const expenses = await getExpenses(db);
+  const baseSum = expenseSummary(expenses);
+
+  const nRev = byDept("nursing").revenue;
+  const mRev = byDept("mee").revenue;
+
+  const expenseSum = {
+    ...baseSum,
+    nursing: { ...baseSum.nursing, revenue: nRev, leftAfterOwed: nRev - baseSum.nursing.owed, leftAfterPaid: nRev - baseSum.nursing.paid },
+    mee: { ...baseSum.mee, revenue: mRev, leftAfterOwed: mRev - baseSum.mee.owed, leftAfterPaid: mRev - baseSum.mee.paid },
+  };
+
   const { catered } = await getBudgetState(db);
   const budget = {
     summary: budgetSummary(catered, { nursing: byDept("nursing").revenue, mee: byDept("mee").revenue }),
     fixedItems: FIXED_ITEMS.map((i) => ({ ...i, catered: catered.includes(i.id) })),
     variableItems: VARIABLE_ITEMS,
     totalFixed: TOTAL_FIXED,
+  };
+
+  const foodPrices = await getFoodPrices(db);
+
+  // One entry per PERSON (payer + plus-one as separate people). Paid or partial only.
+  const foodPeople = (dept: string) => {
+    
+    const rows: {
+      name: string; matric: string; ticket: string; main: string; dessert: string;
+      mainCost: number; smallChops: number; chapman: number; cakeSlice: number; total: number; partial: boolean;
+    }[] = [];
+
+    const componentize = (deptKey: string, mainSel: string, dessertSel: string) => {
+      const { items, total } = personFoodCost(foodPrices, deptKey, mainSel, dessertSel);
+      // items is keyed by label; sum the main by "not one of the fixed labels"
+      const smallChops = items["Small chops"] ?? 0;
+      const chapman = items["Chapman"] ?? 0;
+      const cakeSlice = items["Cake slice"] ?? 0;
+      const mainCost = total - smallChops - chapman - cakeSlice; // whatever's left is the main
+      return { mainCost, smallChops, chapman, cakeSlice, total };
+    };
+
+    for (const o of all) {
+      if (o.dept !== dept) continue;
+      if (o.status !== "successful" && o.status !== "partial") continue;
+      const partial = o.status === "partial";
+
+      const a = componentize(dept, o.attendee?.mainCourse ?? "", o.attendee?.dessert ?? "");
+      rows.push({
+        name: o.attendee?.name ?? "", matric: o.matricNo ?? "", ticket: o.ticketType === "plusOne" ? "Plus One" : "Solo",
+        main: o.attendee?.mainCourse ?? "", dessert: o.attendee?.dessert ?? "",
+        ...a, partial,
+      });
+
+      if (o.ticketType === "plusOne" && o.plusOne) {
+        const p = componentize(dept, o.plusOne.mainCourse ?? "", o.plusOne.dessert ?? "");
+        rows.push({
+          name: `${o.plusOne.name} (+1 of ${o.attendee?.name ?? ""})`, matric: "", ticket: "+1",
+          main: o.plusOne.mainCourse ?? "", dessert: o.plusOne.dessert ?? "",
+          ...p, partial,
+        });
+      }
+    }
+    return rows;
+  };
+
+  const food = {
+    prices: foodPrices,
+    nursing: foodPeople("nursing"),
+    mee: foodPeople("mee"),
   };
 
   return {
@@ -66,6 +130,9 @@ export async function getStats(db: Db) {
       souvenirsNeeded: souvenirsNeeded,
     },
     budget,
+    food,
+    expenses,
+    expenseSum,
     statusCounts: {
       successful: paid.length,
       partial: partial.length,

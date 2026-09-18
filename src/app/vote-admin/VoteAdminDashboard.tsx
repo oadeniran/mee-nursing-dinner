@@ -22,7 +22,7 @@ export default function VoteAdminDashboard({ stats, manage }: { stats: any; mana
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [voter, setVoter] = useState<any>(null);
   const [lookupErr, setLookupErr] = useState("");
-  const [published, setPublished] = useState(false);
+  const [published, setPublished] = useState(stats.published);
   const [tab, setTab] = useState<"results" | "voters" | "candidates">("results");
 
   async function act(body: Record<string, unknown>) {
@@ -89,6 +89,11 @@ export default function VoteAdminDashboard({ stats, manage }: { stats: any; mana
                 ? <>Live at <a className="gold-text" href={`/results/${stats.dept}`} target="_blank" rel="noopener noreferrer">/results/{stats.dept}</a></>
                 : "The public results page is hidden until you publish."}
             </p>
+            <button className="pay-submit" style={{ width: "auto", margin: 0 }}
+              onClick={async () => { const r = await act({ action: "publishResults", published: !published }); if (r.ok !== undefined) setPublished(r.published); }}
+              type="button">
+              {published ? "Unpublish" : "Publish results"}
+          </button>
           </div>
 
           <button className="pay-submit" style={{ width: "auto", margin: 0 }} onClick={toggleVoting} type="button">

@@ -18,7 +18,7 @@ export const PRICING = {
   mee: { single: 35000, plusOne: 55000 },
 } as const;
 
-export const MAIN_COURSES = ["Ofada Rice", "Pounded Yam", "Jollof + Fried"] as const;
+export const MAIN_COURSES = ["Ofada Rice", "Jollof + Fried"] as const;
 export const DESSERTS = ["Cake Slice (Chocolate)", "Cake Slice (Red Velvet)"] as const;
 
 export type Dept = keyof typeof PRICING;

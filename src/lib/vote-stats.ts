@@ -22,12 +22,16 @@ export async function getVoteStats(db: Db, dept: string) {
 
   const meta = await db.collection("meta").findOne({ _id: `voting:${dept}` as never });
 
+  const publishedMeta = await db.collection("meta").findOne({ _id: `results:${dept}` as never });
+  const published = publishedMeta?.published === true;
+
   return {
     dept,
     open: meta?.open === true,
     ballotsCast: ballots.length,
     voterCount,
     tallies,
+    published: published
   };
 }
 

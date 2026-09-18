@@ -7,7 +7,7 @@ export const FIXED_ITEMS = [
   { id: "mc",          name: "MC",               cost: 70000,  note: "" },
   { id: "dj",          name: "DJ",               cost: 60000,  note: "Sound comes with Live band" },
   { id: "media",       name: "Media",            cost: 50000,  note: "" },
-  { id: "videography", name: "Videography",      cost: 80000,  note: "" },
+  { id: "videography", name: "Videography",      cost: 50000,  note: "" },
   { id: "backdrop",    name: "Backdrop",         cost: 30000,  note: "Designer payment + printing" },
   { id: "security",    name: "Security",         cost: 30000,  note: "Letter + payment + men on ground" },
   { id: "booth360",    name: "360 Photo Booth",  cost: 70000,  note: "" },
@@ -36,6 +36,72 @@ export async function setCatered(db: Db, itemId: string, catered: boolean) {
     ? { $addToSet: { catered: itemId } }
     : { $pull: { catered: itemId } as unknown as UpdateFilter<Document>["$pull"] };
   await db.collection("meta").updateOne({ _id: "budget" as never }, op, { upsert: true });
+}
+
+// Per-department expense entries: shares and paid-so-far, both editable per dept.
+// Seeded from fixed items with a default 50/50 split; edited/overridden in DB.
+export type ExpenseEntry = {
+  id: string; name: string; cost: number;
+  nursingShare: number; meeShare: number;
+  nursingPaid: number; meePaid: number;
+};
+
+export async function getExpenses(db: Db): Promise<ExpenseEntry[]> {
+  const overrides = await db.collection("config").findOne({ _id: "expenses" as never });
+  const byId: Record<string, Partial<ExpenseEntry>> = overrides?.items ?? {};
+
+  return FIXED_ITEMS.map((it) => {
+    const ov = byId[it.id] ?? {};
+    const cost = ov.cost ?? it.cost;
+    // Default split is 50/50 of the cost until you set explicit shares.
+    const nursingShare = ov.nursingShare ?? Math.round(cost / 2);
+    const meeShare = ov.meeShare ?? (cost - Math.round(cost / 2));
+    return {
+      id: it.id, name: it.name, cost,
+      nursingShare, meeShare,
+      nursingPaid: ov.nursingPaid ?? 0,
+      meePaid: ov.meePaid ?? 0,
+    };
+  });
+}
+
+export async function setExpense(db: Db, id: string, fields: Partial<ExpenseEntry>) {
+  if (!FIXED_ITEMS.some((i) => i.id === id)) throw new Error("Unknown expense");
+  const clean: Record<string, number> = {};
+  for (const k of ["cost", "nursingShare", "meeShare", "nursingPaid", "meePaid"] as const) {
+    if (k in fields) clean[k] = Math.max(0, Math.round(Number(fields[k]) || 0));
+  }
+  const set: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(clean)) set[`items.${id}.${k}`] = v;
+  await db.collection("config").updateOne({ _id: "expenses" as never }, { $set: set }, { upsert: true });
+}
+
+export function expenseSummary(entries: ExpenseEntry[]) {
+  const totalCost = entries.reduce((s, e) => s + e.cost, 0);
+  const nursing = {
+    owed: entries.reduce((s, e) => s + e.nursingShare, 0),
+    paid: entries.reduce((s, e) => s + e.nursingPaid, 0),
+  };
+  const mee = {
+    owed: entries.reduce((s, e) => s + e.meeShare, 0),
+    paid: entries.reduce((s, e) => s + e.meePaid, 0),
+  };
+  return {
+    totalCost,
+    nursing: { ...nursing, balance: nursing.owed - nursing.paid },
+    mee: { ...mee, balance: mee.owed - mee.paid },
+  };
+}
+
+// Fill paid = share for both departments (the "mark fully paid" shortcut).
+export async function markExpensePaid(db: Db, id: string, paid: boolean) {
+  const entries = await getExpenses(db);
+  const e = entries.find((x) => x.id === id);
+  if (!e) throw new Error("Unknown expense");
+  const set = paid
+    ? { [`items.${id}.nursingPaid`]: e.nursingShare, [`items.${id}.meePaid`]: e.meeShare }
+    : { [`items.${id}.nursingPaid`]: 0, [`items.${id}.meePaid`]: 0 };
+  await db.collection("config").updateOne({ _id: "expenses" as never }, { $set: set }, { upsert: true });
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

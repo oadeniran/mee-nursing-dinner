@@ -896,3 +896,10 @@ section { padding: 5rem 1.25rem; }
 .export-card .admin-sub { display: block; margin-bottom: 1rem; }
 .export-btns { display: flex; flex-wrap: wrap; gap: .6rem; }
 .export-card .pay-submit { width: auto; margin: 0; padding: .6rem 1.1rem; font-size: .88rem; }
+
+.food-prices { margin-top: .5rem; }
+.food-price-row { display: flex; justify-content: space-between; align-items: center; gap: .75rem; padding: .3rem 0; }
+.food-price-row label { font-size: .85rem; color: var(--cream-2); }
+.food-price-row input { width: 90px; padding: .4rem .6rem; border-radius: 8px; border: 1px solid rgba(212,175,55,.3); background: rgba(255,255,255,.04); color: var(--cream); }
+
+.exp-input { width: 90px; padding: .4rem .5rem; border-radius: 8px; border: 1px solid rgba(212,175,55,.3); background: rgba(255,255,255,.04); color: var(--cream); font-size: .85rem; }

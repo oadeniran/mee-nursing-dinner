@@ -203,7 +203,6 @@ export default function Home() {
               <h3>Main Course (Drink + Water Included)</h3>
               <ul>
                 <li>Ofada Rice</li>
-                <li>Pounded Yam</li>
                 <li>Jollof + Fried</li>
               </ul>
               <p className="pick-note">Pick one — you&apos;ll choose at checkout. Protein is Chicken.</p>
