@@ -1,5 +1,5 @@
 import { Db } from "mongodb";
-import { MAIN_COURSES, DESSERTS } from "./config";
+import { MAIN_COURSES, DESSERTS, SOUVENIR_DISCOUNT } from "./config";
 import { getBudgetState, budgetSummary, FIXED_ITEMS, VARIABLE_ITEMS, TOTAL_FIXED } from "./budget";
 import { getFoodPrices, personFoodCost } from "./food-config";
 import { getExpenses, expenseSummary } from "./budget"; 
@@ -45,7 +45,15 @@ export async function getStats(db: Db) {
       solo: list.filter((o) => o.ticketType === "single").length,
       plusOne: list.filter((o) => o.ticketType === "plusOne").length,
       guests: guestsFrom(list),
-      revenue: list.reduce((s, o) => s + (o.totalPaid ?? 0), 0),
+      // Revenue for settle-up EXCLUDES the souvenir portion for MEE opted-in tickets.
+      revenue: list.reduce((s, o) => {
+        const paidAmt = o.totalPaid ?? 0;
+        const souvenirPortion =
+          key === "mee" && o.souvenir !== false
+            ? Math.min(SOUVENIR_DISCOUNT, paidAmt) // don't deduct more than they've paid
+            : 0;
+        return s + (paidAmt - souvenirPortion);
+      }, 0),
     };
   };
 
