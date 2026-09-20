@@ -35,8 +35,12 @@ export async function getStats(db: Db) {
   const guestsFromFull = (list: typeof all) =>
     list.reduce((n, o) => n + (o.ticketType === "plusOne" ? 2 : 1), 0);
 
-  const revenueCollected = all.reduce((sum, o) => sum + (o.totalPaid ?? 0), 0);
-  const revenueExpected = all.reduce((sum, o) => sum + (o.amountDue ?? o.ticket ?? 0), 0);
+    // Actual cash from attendees — excludes sponsorship funds that covered balances.
+  const revenueCollected = all.reduce((sum, o) => sum + ((o.totalPaid ?? 0) - (o.sponsorshipBonus ?? 0)), 0);
+  const revenueExpected = all.reduce((sum, o) => sum + ((o.amountDue ?? o.ticket ?? 0) - (o.sponsorshipBonus ?? 0)), 0);
+
+  // How much sponsorship money covered ticket balances (so it's visible, not lost).
+  //const sponsorshipApplied = all.reduce((sum, o) => sum + (o.sponsorshipBonus ?? 0), 0);
 
   const souvenirsNeeded = paid.reduce((n, o) => {
     if (o.dept !== "mee") return n;        // Nursing gets no souvenir
