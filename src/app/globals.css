@@ -903,3 +903,11 @@ section { padding: 5rem 1.25rem; }
 .food-price-row input { width: 90px; padding: .4rem .6rem; border-radius: 8px; border: 1px solid rgba(212,175,55,.3); background: rgba(255,255,255,.04); color: var(--cream); }
 
 .exp-input { width: 90px; padding: .4rem .5rem; border-radius: 8px; border: 1px solid rgba(212,175,55,.3); background: rgba(255,255,255,.04); color: var(--cream); font-size: .85rem; }
+
+/* Center the check-in card vertically on the screen */
+.checkin-center {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 100vh;
+}

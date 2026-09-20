@@ -74,7 +74,7 @@ export default function VerifyPage() {
   }
 
   return (
-    <main className="pay-main">
+    <main className="pay-main checkin-center">
       <div className="pay-wrap">
         <div className="pay-head">
           <Link href="/" className="muted">← Back to event</Link>

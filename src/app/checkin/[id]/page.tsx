@@ -50,7 +50,7 @@ export default async function CheckinPage({
 
 function Shell({ children }: { children: React.ReactNode }) {
   return (
-    <main className="pay-main">
+    <main className="pay-main checkin-center">
       <div className="pay-wrap" style={{ textAlign: "center" }}>{children}</div>
     </main>
   );

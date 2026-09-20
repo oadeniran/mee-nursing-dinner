@@ -26,7 +26,13 @@ export async function getStats(db: Db) {
   const paid = all.filter((o) => o.status === "successful");
   const partial = all.filter((o) => o.status === "partial");
 
+  const countsAsRealPlusOne = (o: typeof all[number]) =>
+    o.ticketType === "plusOne" && !o.comped && !o.sponsorshipBonus;
+
   const guestsFrom = (list: typeof all) =>
+    list.reduce((n, o) => n + (countsAsRealPlusOne(o) ? 2 : 1), 0);
+
+  const guestsFromFull = (list: typeof all) =>
     list.reduce((n, o) => n + (o.ticketType === "plusOne" ? 2 : 1), 0);
 
   const revenueCollected = all.reduce((sum, o) => sum + (o.totalPaid ?? 0), 0);
@@ -43,7 +49,7 @@ export async function getStats(db: Db) {
     return {
       count: list.length,
       solo: list.filter((o) => o.ticketType === "single").length,
-      plusOne: list.filter((o) => o.ticketType === "plusOne").length,
+      plusOne: list.filter((o) => countsAsRealPlusOne(o)).length,
       guests: guestsFrom(list),
       // Revenue for settle-up EXCLUDES the souvenir portion for MEE opted-in tickets.
       revenue: list.reduce((s, o) => {
@@ -131,7 +137,9 @@ export async function getStats(db: Db) {
     headline: {
       paidTickets: paid.length,
       partialTickets: partial.length,
-      guestsExpected: guestsFrom(paid),
+      confirmedGuests: guestsFrom(paid),
+      guestsExpected: guestsFromFull(paid),
+      allGuests: guestsFromFull(paid) + guestsFromFull(partial),
       checkedIn: paid.filter((o) => o.checkedIn).length,
       revenueCollected,
       revenueExpected,

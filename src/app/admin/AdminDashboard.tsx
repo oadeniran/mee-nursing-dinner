@@ -133,7 +133,9 @@ export default function AdminDashboard({ stats }: { stats: any }) {
         <div className="stat-grid">
           <Stat label="Tickets paid" value={h.paidTickets} />
           <Stat label="Part-paid" value={h.partialTickets} />
+          <Stat label="Confirmed guests" value={h.confirmedGuests} />
           <Stat label="Guests expected" value={h.guestsExpected} />
+          <Stat label="Total Guest Number (Partial Incl.)" value={h.allGuests} />
           <Stat label="Checked in" value={`${h.checkedIn} / ${h.guestsExpected}`} />
           <Stat label="Collected" value={naira(h.revenueCollected)} />
           <Stat label="Expected (paid+partial)" value={naira(h.revenueExpected)} />
