@@ -117,6 +117,40 @@ export default function AdminDashboard({ stats }: { stats: any }) {
     rows.push(["","Cake", sum(n, "cakeSlice"), sum(m, "cakeSlice")]);
     rows.push(["","Total Overall", sum(n, "total"), sum(m, "total")]);
 
+    // --- GRANULAR SELECTION COUNTS ---
+    rows.push([]);
+    rows.push([]);
+
+    // Tally any field across a person list into { value: count }.
+    const tally = (arr: any[], key: string) => {
+      const counts: Record<string, number> = {};
+      for (const r of arr) {
+        const v = (r[key] || "").trim();
+        if (!v) continue;
+        counts[v] = (counts[v] || 0) + 1;
+      }
+      return counts;
+    };
+
+    // Union of all values seen in either department, for aligned rows.
+    const allKeys = (nCounts: Record<string, number>, mCounts: Record<string, number>) =>
+      Array.from(new Set([...Object.keys(nCounts), ...Object.keys(mCounts)])).sort();
+
+    // Main course breakdown
+    const nMain = tally(n, "main"), mMain = tally(m, "main");
+    rows.push(["", "MAIN COURSE COUNTS", "NURSING", "MEE"]);
+    for (const k of allKeys(nMain, mMain)) {
+      rows.push(["", k, nMain[k] || 0, mMain[k] || 0]);
+    }
+
+    // Dessert breakdown (captures cake variants like Chocolate / Red Velvet)
+    const nDes = tally(n, "dessert"), mDes = tally(m, "dessert");
+    rows.push([]);
+    rows.push(["", "DESSERT COUNTS", "NURSING", "MEE"]);
+    for (const k of allKeys(nDes, mDes)) {
+      rows.push(["", k, nDes[k] || 0, mDes[k] || 0]);
+    }
+
 
     downloadCsv("food-costing.csv", [], rows);
   }
