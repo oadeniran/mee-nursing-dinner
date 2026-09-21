@@ -312,20 +312,7 @@ export default function AdminDashboard({ stats }: { stats: any }) {
           </table>
         </div>
 
-        {/* Variable / paused */}
-        <h2 className="admin-h2">Variable Costs <span className="admin-sub">(split by headcount, once finalised)</span></h2>
-        <div className="admin-cards">
-          {stats.expenseSum.totalCost >= 0 && [
-            { id: "food", name: "Food (3-course, drinks, water)", estimate: 1200000, note: "Use the food CSV totals once sales close" },
-            { id: "afterparty", name: "After-party props", estimate: 100000, note: "Awaiting price per person" },
-          ].map((it) => (
-            <div className="admin-card" key={it.id}>
-              <h3>{it.name}</h3>
-              <Row l="Estimate" v={naira(it.estimate)} />
-              <p className="fee-note">{it.note}</p>
-            </div>
-          ))}
-        </div>
+        <AddExpense />
 
         {/* Variable / paused */}
         <h2 className="admin-h2">Variable Costs <span className="admin-sub">(split by headcount, once finalised)</span></h2>
@@ -475,7 +462,43 @@ function ExpenseRow({ entry }: { entry: any }) {
           <span>{fullyPaid ? "Paid" : "—"}</span>
         </label>
       </td>
-      <td><button className="link-btn" disabled={busy} onClick={save} type="button">{saved ? "✓" : "Save"}</button></td>
+       <td>
+        <button className="link-btn" disabled={busy} onClick={save} type="button">{saved ? "✓" : "Save"}</button>
+        {e.custom && (
+          <button className="link-btn" style={{ color: "#ffb4a2", marginLeft: ".5rem" }}
+            onClick={async () => {
+              if (!confirm(`Delete "${e.name}"?`)) return;
+              await fetch("/api/admin/expense", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "delete", id: e.id }) });
+              window.location.reload();
+            }} type="button">Delete</button>
+        )}
+        {overpaid && <div className="cell-sub" style={{ color: "#ffb4a2" }}>overpaid</div>}
+      </td>
     </tr>
+  );
+}
+
+function AddExpense() {
+  const [name, setName] = useState("");
+  const [cost, setCost] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function create() {
+    if (!name.trim()) return;
+    setBusy(true);
+    const res = await fetch("/api/admin/expense", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "create", name: name.trim(), cost: Number(cost) || 0 }),
+    });
+    setBusy(false);
+    if (res.ok) window.location.reload(); // simplest: reload to show the new row
+  }
+
+  return (
+    <div className="seat-row" style={{ marginTop: "1rem", maxWidth: 480 }}>
+      <input className="admin-search" style={{ margin: 0 }} value={name} onChange={(e) => setName(e.target.value)} placeholder="New expense name" />
+      <input className="exp-input" style={{ width: 300 }} type="number" value={cost} onChange={(e) => setCost(e.target.value)} placeholder="Cost" />
+      <button className="pay-submit ghost" style={{ width: "auto", margin: 0 }} disabled={busy || !name.trim()} onClick={create} type="button">Add expense</button>
+    </div>
   );
 }

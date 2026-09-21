@@ -44,35 +44,54 @@ export type ExpenseEntry = {
   id: string; name: string; cost: number;
   nursingShare: number; meeShare: number;
   nursingPaid: number; meePaid: number;
+  custom: boolean;
 };
 
 export async function getExpenses(db: Db): Promise<ExpenseEntry[]> {
-  const overrides = await db.collection("config").findOne({ _id: "expenses" as never });
-  const byId: Record<string, Partial<ExpenseEntry>> = overrides?.items ?? {};
+  const doc = await db.collection("config").findOne({ _id: "expenses" as never });
+  const byId: Record<string, Partial<ExpenseEntry>> = doc?.items ?? {};
+  const custom: Record<string, Partial<ExpenseEntry> & { name: string }> = doc?.custom ?? {};
 
-  return FIXED_ITEMS.map((it) => {
+  // Seeded fixed items (with their overrides).
+  const seeded = FIXED_ITEMS.map((it) => {
     const ov = byId[it.id] ?? {};
     const cost = ov.cost ?? it.cost;
-    // Default split is 50/50 of the cost until you set explicit shares.
     const nursingShare = ov.nursingShare ?? Math.round(cost / 2);
     const meeShare = ov.meeShare ?? (cost - Math.round(cost / 2));
     return {
-      id: it.id, name: it.name, cost,
-      nursingShare, meeShare,
-      nursingPaid: ov.nursingPaid ?? 0,
-      meePaid: ov.meePaid ?? 0,
+      id: it.id, name: it.name, cost, nursingShare, meeShare,
+      nursingPaid: ov.nursingPaid ?? 0, meePaid: ov.meePaid ?? 0, custom: false,
     };
   });
+
+  // Custom items created from the admin UI.
+  const customItems = Object.entries(custom).map(([id, c]) => {
+    const cost = c.cost ?? 0;
+    return {
+      id, name: c.name, cost,
+      nursingShare: c.nursingShare ?? Math.round(cost / 2),
+      meeShare: c.meeShare ?? (cost - Math.round(cost / 2)),
+      nursingPaid: c.nursingPaid ?? 0, meePaid: c.meePaid ?? 0, custom: true,
+    };
+  });
+
+  return [...seeded, ...customItems];
 }
 
+// setExpense must now accept custom ids too — check both sources.
 export async function setExpense(db: Db, id: string, fields: Partial<ExpenseEntry>) {
-  if (!FIXED_ITEMS.some((i) => i.id === id)) throw new Error("Unknown expense");
+  const isSeeded = FIXED_ITEMS.some((i) => i.id === id);
+  const doc = await db.collection("config").findOne({ _id: "expenses" as never });
+  const isCustom = !!doc?.custom?.[id];
+  if (!isSeeded && !isCustom) throw new Error("Unknown expense");
+
+  const prefix = isCustom ? `custom.${id}` : `items.${id}`;
   const clean: Record<string, number> = {};
   for (const k of ["cost", "nursingShare", "meeShare", "nursingPaid", "meePaid"] as const) {
     if (k in fields) clean[k] = Math.max(0, Math.round(Number(fields[k]) || 0));
   }
   const set: Record<string, unknown> = {};
-  for (const [k, v] of Object.entries(clean)) set[`items.${id}.${k}`] = v;
+  for (const [k, v] of Object.entries(clean)) set[`${prefix}.${k}`] = v;
   await db.collection("config").updateOne({ _id: "expenses" as never }, { $set: set }, { upsert: true });
 }
 
@@ -94,14 +113,35 @@ export function expenseSummary(entries: ExpenseEntry[]) {
 }
 
 // Fill paid = share for both departments (the "mark fully paid" shortcut).
+// markExpensePaid: same dual-source handling.
 export async function markExpensePaid(db: Db, id: string, paid: boolean) {
   const entries = await getExpenses(db);
   const e = entries.find((x) => x.id === id);
   if (!e) throw new Error("Unknown expense");
+  const prefix = e.custom ? `custom.${id}` : `items.${id}`;
   const set = paid
-    ? { [`items.${id}.nursingPaid`]: e.nursingShare, [`items.${id}.meePaid`]: e.meeShare }
-    : { [`items.${id}.nursingPaid`]: 0, [`items.${id}.meePaid`]: 0 };
+    ? { [`${prefix}.nursingPaid`]: e.nursingShare, [`${prefix}.meePaid`]: e.meeShare }
+    : { [`${prefix}.nursingPaid`]: 0, [`${prefix}.meePaid`]: 0 };
   await db.collection("config").updateOne({ _id: "expenses" as never }, { $set: set }, { upsert: true });
+}
+
+// Create a new custom expense.
+export async function createExpense(db: Db, name: string, cost: number) {
+  const clean = name.trim().slice(0, 80);
+  if (!clean) throw new Error("Name required");
+  const id = "custom-" + Date.now().toString(36); // unique, sortable
+  const c = Math.max(0, Math.round(cost || 0));
+  await db.collection("config").updateOne(
+    { _id: "expenses" as never },
+    { $set: { [`custom.${id}`]: { name: clean, cost: c, nursingShare: Math.round(c / 2), meeShare: c - Math.round(c / 2), nursingPaid: 0, meePaid: 0 } } },
+    { upsert: true }
+  );
+  return id;
+}
+
+export async function deleteExpense(db: Db, id: string) {
+  if (!id.startsWith("custom-")) throw new Error("Only custom items can be deleted");
+  await db.collection("config").updateOne({ _id: "expenses" as never }, { $unset: { [`custom.${id}`]: "" } });
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
