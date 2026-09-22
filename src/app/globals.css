@@ -911,3 +911,17 @@ section { padding: 5rem 1.25rem; }
   justify-content: center;
   min-height: 100vh;
 }
+
+.table-edit { display: inline-flex; align-items: center; gap: .3rem; }
+.table-edit input { width: 52px; padding: .3rem .4rem; border-radius: 6px; border: 1px solid rgba(212,175,55,.3); background: rgba(255,255,255,.05); color: var(--cream); text-align: center; font-size: .85rem; }
+.table-edit input:focus { outline: none; border-color: var(--gold-400); }
+.table-saved { color: #8fdcae; font-size: .8rem; }
+
+.bytable-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem; }
+.bytable-card { border: 1px solid rgba(212,175,55,.25); border-radius: 12px; padding: 1rem; background: rgba(212,175,55,.05); }
+.bytable-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: .6rem; padding-bottom: .5rem; border-bottom: 1px solid rgba(212,175,55,.2); }
+.bytable-head strong { font-family: var(--font-display); color: var(--gold-100); font-size: 1.1rem; }
+.bytable-count { font-size: .75rem; color: var(--cream-2); }
+.bytable-person { display: flex; justify-content: space-between; align-items: center; gap: .5rem; padding: .35rem 0; font-size: .88rem; color: var(--cream); }
+.bytable-unassigned { border-color: rgba(255,180,162,.4); }
+.bytable-unassigned .bytable-head strong { color: #ffb4a2; }

@@ -21,6 +21,7 @@ const naira = (n: number) => "₦" + n.toLocaleString();
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export default function AdminDashboard({ stats }: { stats: any }) {
   const [q, setQ] = useState("");
+  const [orderView, setOrderView] = useState<"list" | "byTable">("list");
   const h = stats.headline;
 
   const orders = stats.orders.filter((o: any) => {
@@ -246,29 +247,42 @@ export default function AdminDashboard({ stats }: { stats: any }) {
         </div>
 
         {/* Orders */}
-        <h2 className="admin-h2">Orders <span className="admin-sub">({orders.length})</span></h2>
-        <input className="admin-search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search name, email, matric…" />
-        <div className="admin-table-scroll">
-          <table className="admin-table">
-            <thead>
-              <tr><th>Name</th><th>Dept</th><th>Type</th><th>Menu</th><th>Paid</th><th>Status</th><th>Table</th><th>In?</th></tr>
-            </thead>
-            <tbody>
-              {orders.map((o: any) => (
-                <tr key={o.id}>
-                  <td>{o.name}{o.plusOneName ? ` +${o.plusOneName}` : ""}<div className="cell-sub">{o.email}</div></td>
-                  <td>{o.dept}</td>
-                  <td>{o.ticketType === "plusOne" ? "+1" : "Solo"}</td>
-                  <td className="cell-sub">{o.main}<br />{o.dessert}</td>
-                  <td>{naira(o.totalPaid)}<div className="cell-sub">of {naira(o.amountDue)}</div></td>
-                  <td><span className={`status-pill status-${o.status}`}>{o.status}</span></td>
-                  <td>{o.tableNumber ?? "—"}</td>
-                  <td>{o.checkedIn ? "✓" : ""}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <h2 className="admin-h2">
+          Orders <span className="admin-sub">({orders.length})</span>
+        </h2>
+        <div className="admin-tabs" style={{ marginBottom: "1rem" }}>
+          <button className={orderView === "list" ? "active" : ""} onClick={() => setOrderView("list")}>Flat list</button>
+          <button className={orderView === "byTable" ? "active" : ""} onClick={() => setOrderView("byTable")}>By table</button>
         </div>
+
+        {orderView === "list" ? (
+          <>
+            <input className="admin-search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search name, email, matric…" />
+            <div className="admin-table-scroll">
+              <table className="admin-table">
+                <thead>
+                  <tr><th>Name</th><th>Dept</th><th>Type</th><th>Menu</th><th>Paid</th><th>Status</th><th>Table</th><th>In?</th></tr>
+                </thead>
+                <tbody>
+                  {orders.map((o: any) => (
+                    <tr key={o.id}>
+                      <td>{o.name}{o.plusOneName ? ` +${o.plusOneName}` : ""}<div className="cell-sub">{o.email}</div></td>
+                      <td>{o.dept}</td>
+                      <td>{o.ticketType === "plusOne" ? "+1" : "Solo"}</td>
+                      <td className="cell-sub">{o.main}<br />{o.dessert}</td>
+                      <td>{naira(o.totalPaid)}<div className="cell-sub">of {naira(o.amountDue)}</div></td>
+                      <td><span className={`status-pill status-${o.status}`}>{o.status}</span></td>
+                      <td><TableCell id={o.id} value={o.tableNumber} /></td>
+                      <td>{o.checkedIn ? "✓" : ""}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        ) : (
+          <ByTableView orders={stats.orders} />
+        )}
 
         {/* ---- Costs & Settle-up (unified) ---- */}
         <h2 className="admin-h2">Costs &amp; Settle-up</h2>
@@ -499,6 +513,90 @@ function AddExpense() {
       <input className="admin-search" style={{ margin: 0 }} value={name} onChange={(e) => setName(e.target.value)} placeholder="New expense name" />
       <input className="exp-input" style={{ width: 300 }} type="number" value={cost} onChange={(e) => setCost(e.target.value)} placeholder="Cost" />
       <button className="pay-submit ghost" style={{ width: "auto", margin: 0 }} disabled={busy || !name.trim()} onClick={create} type="button">Add expense</button>
+    </div>
+  );
+}
+
+function TableCell({ id, value }: { id: string; value: number | null }) {
+  const [val, setVal] = useState(value ?? "");
+  const [saved, setSaved] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  async function save() {
+    if (String(val) === String(value ?? "")) return; // no change
+    setBusy(true); setSaved(false);
+    const res = await fetch("/api/admin/set-table", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, tableNumber: val }),
+    });
+    setBusy(false);
+    if (res.ok) { setSaved(true); setTimeout(() => setSaved(false), 1500); }
+  }
+
+  return (
+    <span className="table-edit">
+      <input
+        type="number"
+        value={val}
+        disabled={busy}
+        onChange={(e) => setVal(e.target.value)}
+        onBlur={save}
+        onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
+        placeholder="—"
+      />
+      {saved && <span className="table-saved">✓</span>}
+    </span>
+  );
+}
+
+function ByTableView({ orders }: { orders: any[] }) {
+  // Group paid/partial orders by table; count seats (plus-one = 2).
+  const seats = (o: any) => (o.ticketType === "plusOne" ? 2 : 1);
+  const groups: Record<string, any[]> = {};
+  const unassigned: any[] = [];
+  for (const o of orders) {
+    if (o.status !== "successful" && o.status !== "partial") continue;
+    if (o.tableNumber == null) unassigned.push(o);
+    else (groups[o.tableNumber] ??= []).push(o);
+  }
+  const tableNums = Object.keys(groups).map(Number).sort((a, b) => a - b);
+
+  return (
+    <div className="bytable-grid">
+      {tableNums.map((num) => {
+        const rows = groups[num];
+        const seatCount = rows.reduce((s, o) => s + seats(o), 0);
+        const nur = rows.filter((o) => o.deptKey === "nursing").reduce((s, o) => s + seats(o), 0);
+        const mee = rows.filter((o) => o.deptKey === "mee").reduce((s, o) => s + seats(o), 0);
+        return (
+          <div className="bytable-card" key={num}>
+            <div className="bytable-head">
+              <strong>Table {num}</strong>
+              <span className="bytable-count">{seatCount} seats · N{nur}/M{mee}</span>
+            </div>
+            {rows.map((o) => (
+              <div className="bytable-person" key={o.id}>
+                <span>{o.name}{o.plusOneName ? ` +${o.plusOneName}` : ""}
+                  <span className="cell-sub"> [{o.deptKey}]{o.status === "partial" ? " ·part" : ""}{o.checkedIn ? " ·✓in" : ""}</span>
+                </span>
+                <TableCell id={o.id} value={o.tableNumber} />
+              </div>
+            ))}
+          </div>
+        );
+      })}
+
+      {unassigned.length > 0 && (
+        <div className="bytable-card bytable-unassigned">
+          <div className="bytable-head"><strong>No table yet</strong><span className="bytable-count">{unassigned.length}</span></div>
+          {unassigned.map((o) => (
+            <div className="bytable-person" key={o.id}>
+              <span>{o.name}{o.plusOneName ? ` +${o.plusOneName}` : ""}<span className="cell-sub"> [{o.deptKey}]</span></span>
+              <TableCell id={o.id} value={o.tableNumber} />
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
