@@ -48,7 +48,14 @@ export async function POST(req: Request) {
     const orders = db.collection("orders");
     const existing = await orders.findOne({ email: cleanEmail });
 
+    // Sales-closed gate: block NEW orders, still allow existing people to finish paying.
+    const salesMeta = await db.collection("meta").findOne({ _id: "sales" as never });
+    const salesClosed = salesMeta?.closed === true;
     const isResume = resume === true && existing && existing.status !== "successful";
+    if (salesClosed && !existing) {
+      return bad("Ticket sales have closed. See you at the dinner!", 403);
+    }
+
     if (!isResume) {
       const v = verifyToken(token);
       if (!v || v.purpose !== "payment" || v.email !== cleanEmail)
