@@ -178,7 +178,7 @@ export default function AdminDashboard({ stats }: { stats: any }) {
         </div>
 
         {/* ---- Data exports ---- */}
-        <h2 className="admin-h2">Export Data</h2>
+        {/* <h2 className="admin-h2">Export Data</h2>
         <div className="export-grid">
           <div className="export-card">
             <h3>Souvenir recipients</h3>
@@ -205,11 +205,11 @@ export default function AdminDashboard({ stats }: { stats: any }) {
               Download food CSV
           </button>
         </div>
-      </div>
+      </div> */}
         
 
         {/* Departments */}
-        <h2 className="admin-h2">By Department</h2>
+        {/* <h2 className="admin-h2">By Department</h2>
         <div className="admin-cards">
           {(["nursing", "mee"] as const).map((k) => {
             const d = stats.depts[k];
@@ -224,10 +224,10 @@ export default function AdminDashboard({ stats }: { stats: any }) {
               </div>
             );
           })}
-        </div>
+        </div> */}
 
         {/* Menu — catering counts */}
-        <h2 className="admin-h2">Menu Totals <span className="admin-sub">(paid guests, for catering)</span></h2>
+        {/* <h2 className="admin-h2">Menu Totals <span className="admin-sub">(paid guests, for catering)</span></h2>
         <div className="admin-cards">
           <div className="admin-card">
             <h3>Main Course</h3>
@@ -244,10 +244,10 @@ export default function AdminDashboard({ stats }: { stats: any }) {
             <Row l="Pending" v={stats.statusCounts.pending} />
             <Row l="Failed" v={stats.statusCounts.failed} />
           </div>
-        </div>
+        </div> */}
 
         {/* Orders */}
-        <h2 className="admin-h2">
+        {/* <h2 className="admin-h2">
           Orders <span className="admin-sub">({orders.length})</span>
         </h2>
         <div className="admin-tabs" style={{ marginBottom: "1rem" }}>
@@ -282,7 +282,7 @@ export default function AdminDashboard({ stats }: { stats: any }) {
           </>
         ) : (
           <ByTableView orders={stats.orders} />
-        )}
+        )} */}
 
         {/* ---- Costs & Settle-up (unified) ---- */}
         <h2 className="admin-h2">Costs &amp; Settle-up</h2>
